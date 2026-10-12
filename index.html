@@ -250,9 +250,9 @@ const TESTS=[
 
 /* ---------- Zustand ---------- */
 const KEY='gelenkwerk.v1';
-let S={updated:0,history:[],tests:[],cfg:{zones:['hueftbeuger','gesaess','hams','lws','schultern','nacken'],min:15,eq:['ball','band','roll'],focus:true}};
+let S={updated:0,history:[],tests:[],cfg:{zones:[],min:15,eq:[],focus:true}};
 try{const r=JSON.parse(localStorage.getItem(KEY)||'null'); if(r&&r.cfg) S=r;}catch(e){}
-const EQV=2; function migrate(){ if(S.eqv!==EQV){ S.cfg.eq=Object.keys(EQ); S.eqv=EQV; } } migrate();
+const EQV=3; function migrate(){ if(S.eqv!==EQV){ S.cfg.zones=[]; S.cfg.eq=[]; S.eqv=EQV; } } migrate();
 const $=id=>document.getElementById(id);
 const CFG=window.GW_CONFIG||{}, SB=!!(CFG.supabaseUrl&&CFG.supabaseKey), AKEY='gelenkwerk.auth';
 let AUTH=null; try{AUTH=JSON.parse(localStorage.getItem(AKEY)||'null');}catch(e){}
