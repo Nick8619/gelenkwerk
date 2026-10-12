@@ -32,7 +32,7 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{padding-top:env(safe-area-inset-top,0px)}
-#konto input[type=email],#konto input[type=password]{padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;width:100%}
+#welcome input{padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;width:100%}
 body{background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);margin:0}
 .wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:16px 96px}
 h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
@@ -136,6 +136,13 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 </div>
 
 <nav class="tabs" id="tabs"></nav>
+<div class="player" id="welcome" hidden><div class="in" style="max-width:400px;gap:14px;padding-top:6vh">
+  <h1>Gelenk<b style="color:var(--accent)">werk</b></h1>
+  <p>Melde dich an, damit Verlauf und Tests gesichert sind. Beim ersten Mal E-Mail und ein Passwort mit mindestens 8 Zeichen eingeben und „Registrieren“ wählen.</p>
+  <form id="k-form" class="list"><input id="k-mail" type="email" autocomplete="email" placeholder="E-Mail" aria-label="E-Mail"><input id="k-pw" type="password" autocomplete="current-password" placeholder="Passwort" aria-label="Passwort"><button class="btn" type="submit">Anmelden</button><button class="btn ghost" type="button" id="k-new">Registrieren</button><p class="sub" id="k-msg" role="status"></p></form>
+  <button class="chip" id="k-skip" style="align-self:flex-start">Ohne Konto fortfahren</button>
+  <div class="inst"></div>
+</div></div>
 <div class="player" id="player" hidden><div class="in">
   <div class="pbar"><i id="pb"></i></div>
   <div class="head"><span class="sub" id="pcount"></span><button class="chip" id="pquit">Beenden</button></div>
@@ -282,24 +289,37 @@ async function login(mode){ const email=$('k-mail').value.trim(), pw=$('k-pw').v
   if(!email||pw.length<8){ msg.textContent='E-Mail und ein Passwort mit mindestens 8 Zeichen eingeben.'; return; }
   msg.textContent='Einen Moment …';
   try{ const j=await sb(mode==='signup'?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:JSON.stringify({email,password:pw})});
-    if(j&&j.access_token){ setAuth(j); renderKonto(); await pull(); }
+    if(j&&j.access_token){ setAuth(j); $('welcome').hidden=true; renderKonto(); await pull(); }
     else msg.textContent='Konto angelegt. Bestätige den Link in der E-Mail und melde dich danach hier an.';
   }catch(e){ msg.textContent=/invalid login/i.test(e.message)?'E-Mail oder Passwort stimmt nicht.':/already registered/i.test(e.message)?'Für diese E-Mail gibt es schon ein Konto. Bitte anmelden.':'Das hat nicht geklappt: '+e.message; } }
 function renderKonto(){ const el=$('konto'); if(!el) return; let h='<h2>Konto und Daten</h2>';
   if(!SB) h+='<p class="sub">Die Kontoanmeldung ist noch nicht eingerichtet. Verlauf und Tests liegen nur auf diesem Gerät.</p>';
   else if(AUTH) h+=`<p>Angemeldet als <b>${AUTH.email.replace(/[<&]/g,'')}</b></p><p class="sub" style="margin-block:4px 10px">Verlauf, Tests und Einstellungen werden im Konto gesichert und auf jedem Gerät geladen, auf dem du dich anmeldest.</p><div class="chips"><button class="chip" id="k-out">Abmelden</button></div>`;
-  else h+=`<p class="sub" style="margin-bottom:10px">Mit Konto sind Verlauf und Tests gesichert und auf mehreren Geräten verfügbar. Ohne Konto bleiben sie nur auf diesem Gerät.</p><form id="k-form" class="list" style="max-width:360px"><input id="k-mail" type="email" autocomplete="email" placeholder="E-Mail" aria-label="E-Mail"><input id="k-pw" type="password" autocomplete="current-password" placeholder="Passwort" aria-label="Passwort"><div class="row"><button class="btn" type="submit">Anmelden</button><button class="btn ghost" type="button" id="k-new">Registrieren</button></div><p class="sub" id="k-msg" role="status"></p></form>`;
+  else h+=`<p class="sub" style="margin-bottom:10px">Mit Konto sind Verlauf und Tests gesichert und auf mehreren Geräten verfügbar. Ohne Konto bleiben sie nur auf diesem Gerät.</p><div class="chips"><button class="chip" id="k-open">Anmelden oder registrieren</button></div>`;
+  h+='<div class="inst" style="margin-top:12px"></div>';
   h+=`<div class="chips" style="margin-top:14px"><button class="chip" id="k-exp">Daten exportieren</button><label class="chip" style="cursor:pointer">Daten importieren<input id="k-imp" type="file" accept="application/json,.json" hidden></label></div><p class="sub" id="k-io" role="status" style="margin-top:6px"></p>`;
-  el.innerHTML=h; }
+  el.innerHTML=h; renderInst(); }
 document.addEventListener('submit',e=>{ if(e.target.id==='k-form'){ e.preventDefault(); login('login'); } });
 document.addEventListener('click',e=>{ const id=e.target.id;
   if(id==='k-new') login('signup');
+  if(id==='k-open'){ $('k-msg').textContent=''; $('welcome').hidden=false; }
+  if(id==='k-skip'){ try{localStorage.setItem('gelenkwerk.skip','1');}catch(x){} $('welcome').hidden=true; }
+  if(e.target.closest('[data-inst]')&&deferred){ deferred.prompt(); deferred.userChoice.then(()=>{ deferred=null; renderInst(); }); }
   if(id==='k-out'){ setAuth(null); status(''); renderKonto(); }
   if(id==='k-exp'){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'})); a.download='gelenkwerk-daten.json'; document.body.appendChild(a); a.click(); a.remove(); $('k-io').textContent='Datei gelenkwerk-daten.json wurde gespeichert.'; } });
 document.addEventListener('change',e=>{ if(e.target.id!=='k-imp'||!e.target.files[0]) return; const fr=new FileReader();
   fr.onload=()=>{ try{ const d=JSON.parse(fr.result); if(!d||!d.cfg||!Array.isArray(d.history)) throw 0; S=merge(S,d); migrate(); save(); renderAll(); $('k-io').textContent='Daten importiert und mit den vorhandenen zusammengeführt.'; }catch(x){ $('k-io').textContent='Diese Datei ist kein Gelenkwerk-Export.'; } };
   fr.readAsText(e.target.files[0]); });
-window.addEventListener('load',()=>{ if(SB&&AUTH) pull().catch(()=>status('Offline, Daten vom Gerät')); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; renderInst(); });
+window.addEventListener('appinstalled',()=>{ deferred=null; renderInst(); });
+function renderInst(){ const alone=matchMedia('(display-mode: standalone)').matches||navigator.standalone, ios=/iphone|ipad|ipod/i.test(navigator.userAgent); let h='';
+  if(alone) h='';
+  else if(deferred) h='<button class="btn ghost" data-inst>App auf diesem Gerät installieren</button>';
+  else if(ios) h='<p class="sub"><b>Aufs iPhone legen:</b> Diese Seite in Safari öffnen, unten auf das Teilen-Symbol tippen (Quadrat mit Pfeil) und „Zum Home-Bildschirm“ wählen.</p>';
+  else h='<p class="sub"><b>Aufs Handy legen:</b> Diese Seite direkt in Chrome öffnen (nicht in der Mail- oder Messenger-Ansicht). Dann erscheint hier ein Knopf zum Installieren, oder im Menü mit den drei Punkten der Eintrag „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.</p>';
+  document.querySelectorAll('.inst').forEach(el=>el.innerHTML=h); }
+window.addEventListener('load',()=>{ let skip=null; try{skip=localStorage.getItem('gelenkwerk.skip');}catch(x){} if(SB&&!AUTH&&!skip) $('welcome').hidden=false; renderInst(); if(SB&&AUTH) pull().catch(()=>status('Offline, Daten vom Gerät')); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{}); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&SB&&AUTH&&!P) pull().catch(()=>{}); });
 
 /* ---------- Zeichnungen ---------- */
