@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gelenkwerk</title>
+<meta name="description" content="Mobility-Training mit Konfigurator, Timer und Verlauf">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0c6f66">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gelenkwerk">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: eine Spalte fürs Handy, feste Tab-Leiste unten, Player als Vollbild-Overlay */
+:root{
+  --bg:#edf1ef; --surface:#ffffff; --surface2:#e2e9e6; --line:#cdd8d4;
+  --ink:#12211f; --muted:#566965; --accent:#0c6f66; --on-accent:#ffffff;
+  --warm:#b9650e; --feel:#d93a2b; --fig:#12211f; --fig2:#9fb0ab; --prop:#c9d6d2;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"Barlow",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0e1615; --surface:#17221f; --surface2:#1f2d2a; --line:#2c3d39;
+  --ink:#e8f0ed; --muted:#93a8a3; --accent:#49c2b1; --on-accent:#06201d;
+  --warm:#f0a94a; --feel:#ff7b63; --fig:#e8f0ed; --fig2:#5a706b; --prop:#33453f; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0e1615; --surface:#17221f; --surface2:#1f2d2a; --line:#2c3d39;
+  --ink:#e8f0ed; --muted:#93a8a3; --accent:#49c2b1; --on-accent:#06201d;
+  --warm:#f0a94a; --feel:#ff7b63; --fig:#e8f0ed; --fig2:#5a706b; --prop:#33453f; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px)}
+#konto input[type=email],#konto input[type=password]{padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;width:100%}
+body{background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:16px 96px}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:34px;letter-spacing:.01em;text-transform:uppercase}
+h2{font-size:24px;margin-top:26px;margin-bottom:10px}
+h3{font-size:21px}
+p{margin:0}
+.sub{color:var(--muted);font-size:14px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.head b{color:var(--accent)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--warm);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:500;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;border-radius:12px;padding:14px 18px;font:600 20px var(--display);letter-spacing:.03em;text-transform:uppercase;width:100%}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1 1 140px}
+.maps{display:flex;justify-content:center;gap:8px;margin-block:12px}
+.maps figure{margin:0;text-align:center;flex:0 1 150px}
+.maps svg{width:100%;height:auto}
+.maps figcaption{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bm-base{fill:var(--surface2);stroke:var(--fig2);stroke-width:.8;stroke-linejoin:round}
+.bm-z{fill:var(--surface);stroke:var(--fig2);stroke-width:1.2;stroke-linejoin:round;cursor:pointer}
+.bm-z.on{fill:var(--accent);stroke:var(--accent)}
+.switch{display:flex;gap:10px;align-items:flex-start;margin-top:12px}
+.switch input{width:20px;height:20px;accent-color:var(--accent);margin-top:2px;flex:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.list{display:flex;flex-direction:column;gap:10px}
+.ex{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:460px}
+.feel{font-size:14px;margin-top:8px;color:var(--muted)}
+.feel i{display:inline-block;width:11px;height:11px;border-radius:50%;background:var(--feel);opacity:.75;margin-right:7px;vertical-align:-1px}
+.ex>div{min-width:0}
+.figbox{background:var(--surface2);border-radius:10px;display:block;width:100%;height:auto}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-block:4px 6px;font-size:12px;color:var(--muted)}
+.tags span{border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+.tags .t{color:var(--warm);border-color:currentColor}
+ul.cues{margin:0;padding-left:18px;font-size:14.5px}
+ul.cues li{margin-block:2px}
+.slim{grid-template-columns:84px 1fr;align-items:center}
+.dur{font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px}
+.note{border-left:3px solid var(--warm);padding:8px 12px;background:var(--surface);border-radius:0 10px 10px 0;font-size:14px;margin-top:14px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+nav.tabs button{flex:1 1 0;max-width:150px;background:none;border:0;padding:14px 2px 12px;font:600 16px var(--display);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);border-top:3px solid transparent}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-top-color:var(--accent)}
+.player{position:fixed;inset:0;background:var(--bg);z-index:10;overflow:auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.player .in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.pbar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--accent);width:0}
+.clock{font:700 84px/1 var(--display);font-variant-numeric:tabular-nums;text-align:center}
+.clock.prep{color:var(--warm)}
+.phase{text-align:center;font:600 18px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.side{color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.up{color:var(--accent);font-weight:600}.down{color:var(--warm);font-weight:600}
+.test{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.test>div{min-width:0}
+.test .ins{display:flex;gap:6px}
+.test input{width:66px;padding:8px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+.stats{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:12px}
+.stats b{font:700 34px/1 var(--display);display:block}
+@media (max-width:440px){.slim{grid-template-columns:72px 1fr}.clock{font-size:72px}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="head"><h1>Gelenk<b>werk</b></h1><span class="sub" id="sync"></span></div>
+
+  <section id="v-einheit">
+    <h2>Körperzonen</h2>
+    <div class="chips" id="presets"></div>
+    <div class="maps" id="maps"></div>
+    <div class="chips" id="zonechips"></div>
+    <h2>Verfügbare Zeit</h2>
+    <div class="chips" id="times"></div>
+    <h2>Equipment</h2>
+    <div class="chips" id="equip"></div>
+    <label class="switch"><input type="checkbox" id="focus"><span><b>Schwerpunkt-Gewichtung</b><br><span class="sub">Hüfte, hintere Kette, Schulter und Nacken bekommen mehr Zeit, wenn sie in der Auswahl sind.</span></span></label>
+    <h2>Ablauf</h2><p class="sub" style="margin-bottom:8px">Zeit zum Einrichten vor jeder Übung</p><div class="chips" id="gaps"></div><div class="chips" style="margin-top:12px;align-items:center"><label class="switch" style="margin:0 8px 0 0"><input type="checkbox" id="sound"><span><b>Signaltöne</b></span></label><button class="chip" id="soundtest">Ton testen</button></div>
+    <div style="margin-top:18px"><button class="btn" id="gen">Einheit zusammenstellen</button></div>
+    <div id="plan"></div>
+    <p class="note">Dehnen darf ziehen, bis etwa 6 von 10. Stechender Schmerz, Kribbeln oder Taubheit sind das Signal zum Abbrechen. Ruhig weiteratmen, nicht federn.</p>
+  </section>
+
+  <section id="v-routinen" hidden><h2>Feste Routinen</h2><div class="list" id="routines"></div><div id="rplan"></div></section>
+  <section id="v-library" hidden><h2>Übungen</h2><div class="chips" id="libfilter"></div><p class="sub" id="libcount" style="margin-block:10px"></p><div class="list" id="lib"></div></section>
+  <section id="v-test" hidden>
+    <h2>Mobilitätstest</h2>
+    <p class="sub">Alle vier Wochen wiederholen, immer zur gleichen Tageszeit und ohne Aufwärmen. Score: 0 = nicht möglich oder schmerzhaft, 1 = stark eingeschränkt, 2 = leicht eingeschränkt, 3 = frei.</p>
+    <div class="list" id="tests" style="margin-top:12px"></div>
+    <div style="margin-top:14px"><button class="btn" id="savetest">Test speichern</button></div>
+    <div id="testhist"></div>
+  </section>
+  <section id="v-verlauf" hidden><h2>Verlauf</h2><div id="hist"></div><div id="konto"></div></section>
+</div>
+
+<nav class="tabs" id="tabs"></nav>
+<div class="player" id="player" hidden><div class="in">
+  <div class="pbar"><i id="pb"></i></div>
+  <div class="head"><span class="sub" id="pcount"></span><button class="chip" id="pquit">Beenden</button></div>
+  <div id="pfig"></div>
+  <h3 id="pname" style="font-size:28px"></h3>
+  <div class="phase" id="pphase"></div>
+  <div class="clock" id="pclock">0:00</div>
+  <ul class="cues" id="pcues"></ul><p class="feel" id="pfeel"></p>
+  <div class="row"><button class="btn ghost" id="pprev">Zurück</button><button class="btn" id="ppause">Pause</button><button class="btn ghost" id="pnext">Weiter</button></div>
+  <p class="sub" id="pnextname" style="text-align:center"></p>
+</div></div>
+
+<script src="config.js"></script>
+<script>
+const Z={nacken:'Nacken',schultern:'Schultern',brust:'Brust',bws:'Oberer Rücken',unterarme:'Unterarme & Handgelenke',lws:'Unterer Rücken',hueftbeuger:'Hüftbeuger',gesaess:'Gesäß & Hüftrotatoren',adduktoren:'Adduktoren',quads:'Oberschenkel vorn',hams:'Oberschenkel hinten',waden:'Waden & Sprunggelenk'};
+const UPPER=['nacken','schultern','brust','bws','unterarme'], LOWER=['lws','hueftbeuger','gesaess','adduktoren','quads','hams','waden'];
+const PRIO=['hueftbeuger','gesaess','hams','lws','schultern','nacken'];
+const EQ={ball:'Ball',band:'Resistance Band',roll:'Blackroll',stab:'Stab',gewicht:'Kettlebell / Hantel',box:'Box / Bank',stange:'Klimmzugstange'};
+const T={release:'Faszien-Release',mob:'Aktive Mobilisation',stretch:'Dehnung',akt:'Aktivierung'};
+const TORDER={release:0,mob:1,akt:2,stretch:3};
+const STAND=[100,10,100,20,100,52,103,36,104,51,97,36,96,51,101,76,101,100,98,76,97,100];
+const QUAD=[136,62,124,68,84,68,124,84,126,100,122,84,123,100,84,96,58,98,82,96,56,99];
+// p: Kopf, Nacken, Hüfte, Arm1 (Ellbogen,Hand), Arm2, Bein1 (Knie,Fuß), Bein2, optional Kontrollpunkt Wirbelsäule
+const EX=[
+{id:'couch',n:'Couch Stretch',z:['hueftbeuger','quads'],eq:'',t:'stretch',s:2,d:90,c:['Hinteres Knie nah an die Wand, Schienbein senkrecht nach oben','Gesäß der hinteren Seite fest anspannen, Becken nach hinten kippen','Oberkörper langsam aufrichten, kein Hohlkreuz','Zieht es im Knie statt im Oberschenkel: Abstand zur Wand vergrößern'],p:[90,21,90,32,90,68,100,50,114,66,99,50,112,68,118,72,118,100,72,96,62,70],pr:[['wall',58]]},
+{id:'hf_lunge',n:'Hüftbeuger-Stretch im Kniestand',z:['hueftbeuger'],eq:'',t:'stretch',s:2,d:60,c:['Halber Kniestand, vorderes Knie über dem Sprunggelenk','Gesäß hinten anspannen, Schambein Richtung Bauchnabel ziehen','Becken nach vorn schieben, ohne ins Hohlkreuz zu fallen','Arm der hinteren Seite nach oben strecken und leicht zur Gegenseite neigen'],p:[94,23,93,34,92,70,99,18,103,3,86,50,92,66,120,74,120,100,74,97,48,98]},
+{id:'worlds',n:"World's Greatest Stretch",z:['hueftbeuger','bws','adduktoren','hams'],eq:'',t:'mob',s:2,d:60,c:['Tiefer Ausfallschritt, hinteres Bein gestreckt','Hand neben den vorderen Fuß, Ellbogen der Innenseite Richtung Boden senken','Dann denselben Arm zur Decke aufdrehen, Blick folgt der Hand','Langsam wechseln zwischen Absenken und Aufdrehen'],p:[143,54,134,60,104,80,133,42,131,25,134,80,136,100,130,72,128,100,80,90,56,99]},
+{id:'pigeon',n:'Taube',z:['gesaess'],eq:'',t:'stretch',s:2,d:90,c:['Vorderes Schienbein quer vor dem Körper ablegen, hinteres Bein lang nach hinten','Becken gerade nach vorn ausrichten, nicht zur Seite kippen','Mit langem Rücken nach vorn sinken','Bei Druck im Knie: Ferse näher zur Hüfte oder liegenden Figure-4 wählen'],p:[111,43,108,54,100,88,114,74,122,95,112,74,118,95,126,95,106,98,72,95,46,98]},
+{id:'fig4',n:'Figure-4 Stretch liegend',z:['gesaess','lws'],eq:'',t:'stretch',s:2,d:60,c:['Rückenlage, Knöchel auf das gegenüberliegende Knie legen','Hinter dem Oberschenkel des Standbeins greifen und heranziehen','Knie des gekreuzten Beins aktiv nach außen drücken','Kreuzbein bleibt am Boden'],p:[40,91,50,93,86,94,70,82,92,72,68,84,90,74,110,80,98,66,96,66,122,62]},
+{id:'s9090',n:'90/90 Hip Switches',z:['gesaess','hueftbeuger','adduktoren'],eq:'',t:'mob',s:1,d:90,c:['Sitz mit beiden Knien im 90°-Winkel, ein Bein vorn, eines seitlich','Oberkörper aufrecht, Hände wenn nötig hinter dem Körper abstützen','Knie langsam über die Mitte zur anderen Seite kippen, Fersen bleiben am Boden','Auf jeder Seite kurz aufrichten und zum vorderen Knie vorbeugen'],p:[96,43,96,54,96,90,104,72,114,88,88,74,82,95,124,94,132,99,78,96,58,98]},
+{id:'frog',n:'Frosch-Stretch',z:['adduktoren'],eq:'',t:'stretch',s:1,d:90,c:['Vierfüßler, Knie so weit wie möglich auseinander, Füße in Linie mit den Knien','Auf die Unterarme ablegen','Gesäß langsam nach hinten schieben, Rücken bleibt lang','Im Atemrhythmus sanft vor und zurück wiegen'],p:[127,80,117,78,82,74,118,97,136,98,116,97,134,99,86,98,62,98,82,98,58,99]},
+{id:'cossack',n:'Cossack Squat',z:['adduktoren','gesaess','waden'],eq:'',t:'mob',s:1,d:90,c:['Sehr breiter Stand, Gewicht auf ein Bein verlagern und tief setzen','Ferse des gebeugten Beins bleibt am Boden','Das andere Bein gestreckt, Zehen zeigen nach oben','Flüssig von Seite zu Seite wechseln, Brust aufrecht'],p:[94,31,94,42,96,78,104,56,97,63,84,56,93,63,122,88,148,98,74,74,80,100]},
+{id:'deep_squat',n:'Tiefe Hocke halten',z:['gesaess','adduktoren','waden','lws'],eq:'',t:'mob',s:1,d:90,c:['Füße etwas breiter als hüftbreit, tief absetzen','Fersen am Boden, bei Bedarf an einem Türrahmen festhalten','Ellbogen drücken die Knie nach außen, Brust anheben','Gewicht langsam von Fuß zu Fuß verlagern'],p:[112,42,108,53,94,86,118,70,126,57,116,71,124,58,122,74,106,100,120,75,104,100]},
+{id:'jefferson',n:'Jefferson Curl ohne Gewicht',z:['hams','lws','bws'],eq:'',t:'mob',s:1,d:90,c:['Aufrecht stehen, Kinn zur Brust','Wirbel für Wirbel nach unten abrollen, Arme hängen schwer','Unten zwei Atemzüge bleiben, Knie gestreckt aber nicht überstreckt','Genauso langsam wieder aufrollen, Kopf kommt zuletzt'],p:[121,83,116,74,92,52,115,88,113,100,112,88,110,100,93,76,94,100,91,76,92,100,112,52]},
+{id:'ham_band',n:'Hamstring-Stretch mit Band',z:['hams','waden'],eq:'band',t:'stretch',s:2,d:75,c:['Rückenlage, Band um den Fußballen, anderes Bein lang am Boden','Gestrecktes Bein anheben, bis es deutlich zieht','5 Sekunden die Ferse gegen das Band nach unten drücken, dann lösen und weiter heranziehen','Becken und unterer Rücken bleiben am Boden'],p:[40,91,50,93,84,94,66,82,78,70,64,84,76,72,92,68,100,42,110,96,136,97],pr:[['band',78,70,100,42]]},
+{id:'elephant',n:'Elephant Walk',z:['hams','waden'],eq:'',t:'mob',s:1,d:75,c:['Vorbeugen, Hände auf den Boden oder auf eine Erhöhung','Abwechselnd ein Knie durchstrecken, das andere beugen','Sitzbeinhöcker aktiv zur Decke schieben','Ruhiger Rhythmus, etwa eine Sekunde pro Seite'],p:[120,82,114,73,90,50,119,87,124,100,116,87,120,100,92,76,94,100,106,76,102,99]},
+{id:'good_morning',n:'Hip Hinge (Good Morning)',z:['hams','lws'],eq:'',t:'akt',s:1,d:60,c:['Hüftbreiter Stand, Knie minimal gebeugt, Hände an den Hinterkopf','Gesäß weit nach hinten schieben, Rücken bleibt gerade','So tief, bis die Oberschenkelrückseite spannt','Über die Gesäßspannung wieder aufrichten'],p:[131,45,120,48,88,54,116,38,127,39,114,40,125,41,93,77,92,100,91,77,90,100]},
+{id:'roll_glute',n:'Blackroll Gesäß',z:['gesaess'],eq:'roll',t:'release',s:2,d:60,c:['Auf die Rolle setzen, Knöchel auf das andere Knie legen','Gewicht auf die Gesäßhälfte des gekreuzten Beins verlagern','Sehr langsam rollen, auf Druckpunkten 20 bis 30 Sekunden bleiben','Nicht über den Sitzbeinhöcker oder die Lendenwirbelsäule rollen'],p:[65,42,70,52,92,76,62,74,58,98,60,74,56,98,114,60,121,72,118,72,128,100],pr:[['roll',92,90,10]]},
+{id:'roll_ham',n:'Blackroll Oberschenkel hinten',z:['hams'],eq:'roll',t:'release',s:1,d:90,c:['Rolle unter die Oberschenkelrückseite, Hände hinter dem Körper','Gesäß anheben und vom Sitzbein bis kurz vor die Kniekehle rollen','Für mehr Druck ein Bein über das andere legen','Auf einem Punkt bleiben und das Knie langsam beugen und strecken'],p:[61,42,66,52,80,84,58,75,54,98,56,75,52,98,106,79,134,82,106,81,134,86],pr:[['roll',104,91,9]]},
+{id:'roll_calf',n:'Blackroll Waden',z:['waden'],eq:'roll',t:'release',s:1,d:90,c:['Rolle unter die Waden, Gesäß anheben','Langsam von der Achillessehne bis unter die Kniekehle rollen','Fuß nach innen und außen drehen, um alle Anteile zu treffen','Auf Druckpunkten den Fuß kreisen lassen'],p:[61,42,66,52,80,86,58,75,54,98,56,75,52,98,106,82,134,80,106,84,134,84],pr:[['roll',124,91,9]]},
+{id:'roll_quad',n:'Blackroll Oberschenkel vorn',z:['quads','hueftbeuger'],eq:'roll',t:'release',s:1,d:90,c:['Bauchlage auf den Unterarmen, Rolle unter die Oberschenkel','Von oberhalb des Knies bis zur Leiste rollen','Bauch fest, nicht ins Hohlkreuz durchhängen','Auf Druckpunkten das Knie langsam beugen und strecken'],p:[139,61,128,68,94,79,130,95,147,98,127,95,144,99,68,83,42,86,68,85,42,90],pr:[['roll',80,91,9]]},
+{id:'roll_bws',n:'Blackroll BWS-Streckung',z:['bws','brust'],eq:'roll',t:'release',s:1,d:90,c:['Rolle quer unter die Brustwirbelsäule, Hände stützen den Kopf','Gesäß bleibt am Boden, Rippen nicht aufsperren','Beim Ausatmen über die Rolle nach hinten strecken','Segment für Segment nach oben wandern, nie auf die Lendenwirbelsäule'],p:[47,78,58,80,94,93,56,64,45,72,58,66,47,74,116,70,128,100,114,71,126,100,74,74],pr:[['roll',72,91,10]]},
+{id:'roll_lat',n:'Blackroll Latissimus',z:['schultern','bws'],eq:'roll',t:'release',s:2,d:60,c:['Seitlage, Rolle knapp unterhalb der Achsel','Unterer Arm lang über Kopf, Daumen zeigt nach oben','Kleine Rollbewegungen entlang des seitlichen Rückens','Oberkörper leicht nach vorn und hinten drehen'],p:[44,74,56,80,92,91,42,84,26,88,60,66,72,78,118,94,144,96,110,74,116,100],pr:[['roll',62,92,9]]},
+{id:'ball_glute',n:'Ball Gesäß an der Wand',z:['gesaess'],eq:'ball',t:'release',s:2,d:60,c:['Ball zwischen Gesäß und Wand, seitlich hinter dem Hüftknochen','Druck über das Körpergewicht dosieren','Kleine Kreise, auf Druckpunkten 20 bis 30 Sekunden bleiben','Dabei das Knie der Seite anheben und nach außen drehen'],p:[82,10,82,20,80,52,85,36,88,50,80,36,82,50,84,76,84,100,92,74,96,96],pr:[['wall',68],['ball',73,55,4.5]]},
+{id:'ball_tfl',n:'Ball Hüftbeuger',z:['hueftbeuger'],eq:'ball',t:'release',s:2,d:60,c:['Bauchlage, Ball knapp unterhalb und innerhalb des vorderen Hüftknochens','Auf die Unterarme stützen und Gewicht langsam ablegen','Ruhig atmen, bis der Druck nachlässt','Knie der Seite langsam beugen und strecken. Nicht in den Bauchraum drücken'],p:[139,66,128,72,94,84,130,96,147,98,127,96,144,99,68,90,42,94,68,92,42,97],pr:[['ball',98,94,5]]},
+{id:'ball_pec',n:'Ball Brustmuskel an der Wand',z:['brust','schultern'],eq:'ball',t:'release',s:2,d:60,c:['Ball zwischen Wand und Brustmuskel, knapp unter dem Schlüsselbein','Körpergewicht in die Wand lehnen','Kleine Kreise Richtung Schulter','Arm der Seite langsam heben und senken'],p:[115,10,116,21,112,52,108,37,106,52,124,36,128,22,112,76,110,100,106,76,100,100],pr:[['wall',133],['ball',125,27,4.5]]},
+{id:'ball_trap',n:'Ball oberer Trapez an der Wand',z:['nacken','schultern'],eq:'ball',t:'release',s:2,d:60,c:['Ball zwischen Wand und Muskel zwischen Nacken und Schulterblatt','Niemals direkt auf die Wirbelsäule','Leicht in die Knie gehen und aufrichten, um zu rollen','Auf Druckpunkten den Kopf langsam zur Gegenseite neigen'],p:[84,10,82,21,80,52,85,36,86,51,80,36,80,51,84,76,86,100,80,76,82,100],pr:[['wall',68],['ball',74,23,4.5]]},
+{id:'ball_foot',n:'Ball Fußsohle',z:['waden'],eq:'ball',t:'release',s:2,d:45,c:['Im Stand einen Fuß auf den Ball stellen','Von der Ferse bis zum Ballen langsam ausrollen','Druck so wählen, dass es angenehm intensiv ist','Lockert die gesamte hintere Kette mit'],p:[100,10,100,20,100,52,103,36,104,51,97,36,96,51,106,74,108,91,98,76,97,100],pr:[['ball',108,97,4]]},
+{id:'cat_cow',n:'Katze-Kuh',z:['lws','bws','nacken'],eq:'',t:'mob',s:1,d:60,c:['Vierfüßler, Hände unter den Schultern, Knie unter den Hüften','Ausatmen: Rücken rund, Kinn zur Brust, Steißbein einrollen','Einatmen: Brustbein nach vorn, Blick leicht nach oben','Langsam und über die ganze Wirbelsäule verteilt bewegen'],p:[136,76,124,68,84,68,124,84,126,100,122,84,123,100,84,96,58,98,82,96,56,99,104,50]},
+{id:'childs',n:'Kindhaltung mit langen Armen',z:['lws','schultern','bws'],eq:'',t:'stretch',s:1,d:75,c:['Gesäß auf die Fersen, Knie etwas geöffnet','Arme weit nach vorn strecken, Stirn Richtung Boden','In den unteren Rücken atmen','Für die Flanke beide Hände zu einer Seite wandern lassen'],p:[120,90,110,86,76,84,128,92,146,98,126,94,144,99,100,97,72,98,98,98,70,99,94,76]},
+{id:'thread',n:'BWS-Rotation im Vierfüßler',z:['bws','schultern'],eq:'',t:'mob',s:2,d:45,c:['Vierfüßler, Gesäß leicht Richtung Fersen','Einen Arm unter dem Körper durchfädeln, Schulter Richtung Boden','Dann denselben Arm weit zur Decke aufdrehen, Blick folgt','Hüfte bleibt ruhig, die Drehung kommt aus dem oberen Rücken'],p:[134,60,124,68,84,68,122,50,119,34,124,84,126,100,84,96,58,98,82,96,56,99]},
+{id:'open_book',n:'Open Book',z:['bws','brust'],eq:'',t:'mob',s:2,d:45,c:['Seitlage, Knie auf Hüfthöhe angewinkelt, Arme gestreckt vor der Brust','Oberen Arm in großem Bogen zur anderen Seite öffnen','Blick folgt der Hand, Knie bleiben aufeinander','Offen zwei Atemzüge bleiben, dann zurück'],p:[43,89,54,92,88,93,56,75,50,60,68,96,84,98,106,76,122,94,104,78,120,96]},
+{id:'cobra',n:'Sphinx und Kobra',z:['lws','hueftbeuger','brust'],eq:'',t:'mob',s:1,d:60,c:['Bauchlage, Hände neben der Brust','Brustbein nach vorn und oben schieben, Becken bleibt am Boden','Schultern weg von den Ohren, Gesäß locker','Nur so hoch, wie es im unteren Rücken druckfrei bleibt'],p:[117,55,112,66,84,96,116,83,120,99,113,84,117,99,58,97,32,98,58,98,32,99,106,92]},
+{id:'twist',n:'Wirbelsäulenrotation liegend',z:['lws','gesaess','bws'],eq:'',t:'stretch',s:2,d:60,c:['Rückenlage, ein Knie anziehen und über den Körper zur Gegenseite legen','Arm der anderen Seite ausstrecken, Blick dorthin','Beide Schultern bleiben schwer am Boden','Mit jeder Ausatmung das Knie etwas tiefer sinken lassen'],p:[40,91,50,93,86,93,60,78,56,64,66,96,80,98,104,74,118,92,112,95,138,97]},
+{id:'knees_chest',n:'Knie zur Brust',z:['lws','gesaess'],eq:'',t:'stretch',s:1,d:60,c:['Rückenlage, beide Knie zur Brust ziehen','Hände unterhalb der Knie greifen','Unteren Rücken breit in den Boden sinken lassen','Sanft von Seite zu Seite schaukeln'],p:[40,91,50,93,86,93,66,80,82,68,64,82,80,70,80,66,104,62,78,68,102,66]},
+{id:'side_bend',n:'Seitneigung im Stand',z:['lws','bws'],eq:'',t:'stretch',s:2,d:45,c:['Hüftbreiter Stand, ein Arm lang über Kopf','Zur Gegenseite neigen, Hüfte schiebt leicht zur anderen Seite','Nicht nach vorn abknicken, Brust bleibt offen','In die gedehnte Flanke atmen'],p:[118,17,110,25,100,52,114,10,130,10,97,40,102,51,105,76,108,100,95,76,92,100,100,36]},
+{id:'wall_angel',n:'Wall Angels',z:['schultern','bws','brust'],eq:'',t:'akt',s:1,d:60,c:['Rücken, Hinterkopf und Gesäß an die Wand, Füße eine Fußlänge davor','Arme in U-Form, Handrücken und Ellbogen Richtung Wand','Arme langsam nach oben schieben und wieder senken','Rippen unten halten, unterer Rücken bleibt nah an der Wand'],p:[100,10,100,20,100,52,116,22,117,6,84,22,83,6,102,76,103,100,98,76,97,100]},
+{id:'band_pass',n:'Band Pass-Through',z:['schultern','brust'],eq:'band',t:'mob',s:1,d:60,c:['Band sehr breit greifen, Arme gestreckt','In großem Bogen über den Kopf bis hinter den Rücken führen','Rippen unten lassen, kein Hohlkreuz','Griff nur enger wählen, wenn es schmerzfrei bleibt'],p:[100,12,100,22,100,54,114,14,126,3,86,14,74,3,102,77,103,100,98,77,97,100],pr:[['band',74,3,126,3]]},
+{id:'band_pull',n:'Band Pull-Apart',z:['schultern','bws'],eq:'band',t:'akt',s:1,d:60,c:['Band schulterbreit auf Brusthöhe, Arme gestreckt','Band auseinanderziehen, bis es die Brust berührt','Schulterblätter nach hinten unten ziehen, Schultern nicht hochziehen','Langsam und kontrolliert zurück'],p:[100,10,100,20,100,52,116,24,132,24,84,24,68,24,102,76,103,100,98,76,97,100],pr:[['band',68,24,132,24]]},
+{id:'band_lat',n:'Band Lat-Stretch',z:['schultern','bws'],eq:'band',t:'stretch',s:2,d:60,c:['Band hoch befestigen und mit einer Hand greifen','Zurückgehen, bis der Arm lang gezogen wird, Oberkörper vorbeugen','Hüfte nach hinten sinken lassen, Arm bleibt neben dem Ohr','Oberkörper leicht nach innen drehen, um die Flanke zu treffen'],p:[121,57,112,49,80,60,126,40,140,30,104,66,90,76,86,80,84,100,80,82,76,100],pr:[['band',140,30,172,8],['dot',172,8]]},
+{id:'band_hip',n:'Hüftbeuger-Stretch mit Bandzug',z:['hueftbeuger','gesaess'],eq:'band',t:'stretch',s:2,d:75,c:['Band tief befestigen und hoch um den Oberschenkel des hinteren Beins legen','Halber Kniestand, das Band zieht die Hüfte nach vorn','Gesäß anspannen, Becken aufrichten','Kleine Bewegungen vor und zurück, Oberkörper bleibt aufrecht'],p:[94,23,93,34,92,70,86,50,92,66,84,52,90,68,120,74,120,100,74,97,48,98],pr:[['band',92,75,172,86],['dot',172,86]]},
+{id:'band_ankle',n:'Sprunggelenk mit Bandzug',z:['waden'],eq:'band',t:'mob',s:2,d:60,c:['Band tief hinter dir befestigen und vorn um das Sprunggelenk legen','Halber Kniestand, das Band zieht nach hinten','Knie über die kleinen Zehen nach vorn schieben','Ferse bleibt am Boden, im Sekundentakt vor und zurück'],p:[101,27,98,38,86,72,108,56,122,70,106,57,120,72,126,76,118,100,70,97,44,98],pr:[['band',116,95,20,97],['dot',20,97]]},
+{id:'knee_wall',n:'Knie zur Wand',z:['waden'],eq:'',t:'mob',s:2,d:45,c:['Halber Kniestand vor einer Wand, Zehen etwa eine Handbreit entfernt','Knie nach vorn zur Wand schieben','Ferse bleibt fest am Boden, Fußgewölbe aufrecht','Abstand vergrößern, sobald das Knie die Wand leicht erreicht'],p:[101,27,98,38,86,72,108,56,122,70,106,57,120,72,126,76,118,100,70,97,44,98],pr:[['wall',134]]},
+{id:'calf_stretch',n:'Wadendehnung an der Wand',z:['waden'],eq:'',t:'stretch',s:2,d:60,c:['Hände an die Wand, ein Bein weit nach hinten','Hintere Ferse in den Boden drücken, Knie gestreckt','Hüfte nach vorn schieben, Fuß zeigt gerade nach vorn','Zweite Hälfte mit leicht gebeugtem Knie für die tiefe Wade'],p:[117,18,112,28,94,56,125,34,139,30,123,36,139,34,114,78,112,100,82,78,70,100],pr:[['wall',142]]},
+{id:'cross_body',n:'Schulterdehnung quer vor der Brust',z:['schultern'],eq:'',t:'stretch',s:2,d:45,c:['Einen Arm gestreckt quer vor die Brust führen','Mit dem anderen Unterarm oberhalb des Ellbogens heranziehen','Schulter bewusst nach unten ziehen','Rumpf bleibt gerade, nicht mitdrehen'],p:[100,10,100,20,100,52,94,27,78,26,82,38,88,25,102,76,103,100,98,76,97,100]},
+{id:'pec_wall',n:'Brustdehnung am Türrahmen',z:['brust','schultern'],eq:'',t:'stretch',s:2,d:60,c:['Unterarm senkrecht an den Türrahmen, Ellbogen auf Schulterhöhe','Kleinen Schritt nach vorn, Brustbein nach vorn schieben','Oberkörper leicht von der Wand wegdrehen','Bei Druck vorn in der Schulter den Ellbogen tiefer setzen'],p:[108,10,106,21,102,52,120,22,121,6,100,36,98,51,110,76,116,100,98,76,90,100],pr:[['wall',125]]},
+{id:'neck_side',n:'Nacken-Seitneigung',z:['nacken'],eq:'',t:'stretch',s:2,d:45,c:['Aufrecht stehen oder sitzen, ein Arm hängt lang nach unten','Ohr zur gegenüberliegenden Schulter neigen','Hand liegt nur mit ihrem Gewicht auf dem Kopf, nicht ziehen','Hängende Hand aktiv Richtung Boden schieben'],p:[107,12,100,22,100,54,119,16,110,5,87,38,85,53,102,77,103,100,98,77,97,100]},
+{id:'lev_scap',n:'Schulterblattheber-Dehnung',z:['nacken'],eq:'',t:'stretch',s:2,d:45,c:['Kopf 45° zur Seite drehen, dann Kinn Richtung Achsel senken','Hand der gleichen Seite legt sich auf den Hinterkopf','Andere Hand hinter den Rücken oder unter das Gesäß','Die Dehnung sitzt hinten seitlich am Nacken bis zum Schulterblatt'],p:[105,15,100,22,100,54,116,14,108,7,90,36,96,50,102,77,103,100,98,77,97,100]},
+{id:'chin_tuck',n:'Chin Tucks',z:['nacken'],eq:'',t:'akt',s:1,d:45,c:['Aufrecht mit dem Rücken an der Wand','Kinn gerade nach hinten schieben, als würdest du ein Doppelkinn machen','Hinterkopf wandert zur Wand, Blick bleibt waagerecht','3 Sekunden halten, lösen, wiederholen'],p:STAND,pr:[['wall',92]]},
+{id:'neck_cars',n:'Nackenkreise kontrolliert',z:['nacken'],eq:'',t:'mob',s:1,d:60,c:['Schultern tief, Rumpf angespannt','Kinn zur Brust, dann Ohr zur Schulter und in großem Bogen weiter','So langsam wie möglich, etwa 15 Sekunden pro Kreis','Nach jedem Kreis die Richtung wechseln, nach hinten nur schmerzfrei'],p:[100,10,100,20,100,52,107,34,102,48,93,34,98,48,101,76,101,100,98,76,97,100],pr:[['arc',100,10,12]]},
+{id:'shoulder_cars',n:'Schulterkreise kontrolliert',z:['schultern'],eq:'',t:'mob',s:2,d:45,c:['Stand, ganzer Körper angespannt, Faust locker geschlossen','Arm gestreckt nach vorn oben führen, so nah am Ohr wie möglich','Am höchsten Punkt Handfläche nach außen drehen und hinten herum weiter','Rumpf dreht nicht mit, größter möglicher Kreis'],p:[100,10,100,20,100,52,110,10,120,0,97,36,96,51,101,76,101,100,98,76,97,100],pr:[['arc',100,20,27]]},
+{id:'hip_cars',n:'Hüftkreise im Vierfüßler',z:['gesaess','hueftbeuger'],eq:'',t:'mob',s:2,d:45,c:['Vierfüßler, Rücken ruhig wie eine Tischplatte','Knie zur Brust, dann seitlich anheben und nach hinten oben führen','Den größten Kreis zeichnen, den die Hüfte hergibt','Becken und Rücken bewegen sich nicht mit'],p:[136,62,124,68,84,68,124,84,126,100,122,84,123,100,90,58,68,62,84,96,58,98],pr:[['arc',84,68,17]]},
+{id:'glute_bridge',n:'Glute Bridge',z:['gesaess','hueftbeuger','lws'],eq:'',t:'akt',s:1,d:60,c:['Rückenlage, Füße hüftbreit nah am Gesäß','Fersen in den Boden drücken, Becken heben, bis Knie, Hüfte und Schulter eine Linie bilden','Oben 3 Sekunden das Gesäß fest anspannen','Rippen unten halten, die Arbeit kommt aus dem Gesäß und nicht aus dem Rücken'],p:[43,91,54,92,90,70,70,96,86,98,68,97,84,99,113,70,116,100,111,71,114,100]},
+{id:'prone_y',n:'Y-Heben in Bauchlage',z:['schultern','bws'],eq:'',t:'akt',s:1,d:45,c:['Bauchlage, Arme in Y-Form nach vorn, Daumen zeigen nach oben','Stirn knapp über dem Boden, Nacken lang','Arme wenige Zentimeter anheben, Schulterblätter nach hinten unten','3 Sekunden halten, ablegen, wiederholen'],p:[137,85,126,90,90,94,141,80,157,74,139,82,155,78,64,95,38,96,64,97,38,98]},
+{id:'wrist',n:'Handgelenk-Dehnung im Vierfüßler',z:['unterarme'],eq:'',t:'stretch',s:1,d:60,c:['Vierfüßler, Finger zeigen zu den Knien, Handflächen flach','Gesäß langsam Richtung Fersen schieben','Handballen bleiben am Boden','Zweite Hälfte mit den Handrücken am Boden'],p:[136,62,124,68,84,68,124,84,120,100,122,84,118,100,84,96,58,98,82,96,56,99]},
+{id:'prayer',n:'Gebetshaltung für die Handgelenke',z:['unterarme'],eq:'',t:'stretch',s:1,d:45,c:['Handflächen vor der Brust aneinanderlegen','Hände langsam nach unten schieben, Handballen bleiben zusammen','Ellbogen wandern nach außen','Danach Handrücken aneinander, Finger zeigen nach unten'],p:[100,10,100,20,100,52,114,35,101,30,86,35,99,30,102,76,103,100,98,76,97,100]},
+{id:'stab_pass',n:'Stab Pass-Through',z:['schultern','brust'],eq:'stab',t:'mob',s:1,d:60,c:['Stab sehr breit greifen, Arme gestreckt','In großem Bogen über den Kopf bis ans Gesäß führen und zurück','Rippen unten lassen, Ellbogen bleiben gestreckt','Griff erst enger wählen, wenn die Bewegung schmerzfrei und rund ist'],p:[100,12,100,22,100,54,114,14,126,3,86,14,74,3,102,77,103,100,98,77,97,100],pr:[['stick',66,3,134,3]]},
+{id:'stab_rot',n:'Schulter-Außenrotation mit Stab',z:['schultern'],eq:'stab',t:'stretch',s:2,d:45,c:['Ellbogen 90° gebeugt und fest am Körper, Hand greift das obere Stabende','Der Stab läuft außen hinter dem Oberarm entlang nach unten','Die andere Hand zieht das untere Ende nach vorn und dreht so den Unterarm nach außen','Sanft dosieren, Schulter bleibt tief'],p:[100,10,100,20,100,52,113,36,126,26,92,38,100,50,102,76,103,100,98,76,97,100],pr:[['stick',129,22,98,53]]},
+{id:'stab_ohs',n:'Overhead Squat mit Stab',z:['schultern','bws','gesaess','waden'],eq:'stab',t:'mob',s:1,d:75,c:['Stab breit greifen und über den Kopf strecken','Langsam in die tiefe Hocke, Stab bleibt über der Fußmitte','Fersen am Boden, Brust aufrecht, Arme aktiv nach oben schieben','Unten zwei Atemzüge bleiben, dann aufstehen'],p:[112,42,108,53,94,86,112,36,116,20,110,37,114,21,122,74,106,100,120,75,104,100],pr:[['stick',106,18,126,22]]},
+{id:'stab_hinge',n:'Hip Hinge mit Stab am Rücken',z:['hams','lws'],eq:'stab',t:'akt',s:1,d:60,c:['Stab längs am Rücken: Kontakt an Hinterkopf, Brustwirbelsäule und Kreuzbein','Eine Hand hält im Nacken, die andere im unteren Rücken','Gesäß weit nach hinten schieben, alle drei Kontaktpunkte bleiben','So lernst du die Beugung aus der Hüfte statt aus dem Rücken'],p:[131,45,120,48,88,54,112,40,124,41,100,62,92,54,93,77,92,100,91,77,90,100],pr:[['stick',138,40,82,50]]},
+{id:'kb_goblet',n:'Goblet Squat halten',z:['gesaess','adduktoren','waden','lws'],eq:'gewicht',t:'mob',s:1,d:75,c:['Gewicht nah vor der Brust halten, in die tiefe Hocke setzen','Das Gewicht dient als Gegengewicht, die Brust bleibt aufrecht','Ellbogen drücken die Knie nach außen','Langsam von Seite zu Seite verlagern und kleine Kreise mit der Hüfte'],p:[112,42,108,53,94,86,118,70,126,57,116,71,124,58,122,74,106,100,120,75,104,100],pr:[['kb',128,56]]},
+{id:'kb_halo',n:'Halo',z:['schultern','bws'],eq:'gewicht',t:'mob',s:1,d:60,c:['Leichtes Gewicht mit beiden Händen vor der Brust','Eng um den Kopf kreisen, Ellbogen gehen nacheinander hoch','Kopf und Rumpf bleiben ruhig, Rippen unten','Nach jeder Runde die Richtung wechseln'],p:[100,12,100,22,100,54,114,16,110,3,88,30,100,34,102,77,103,100,98,77,97,100],pr:[['arc',100,12,15],['kb',113,4]]},
+{id:'kb_jefferson',n:'Jefferson Curl mit Gewicht',z:['hams','lws','bws'],eq:'gewicht',t:'mob',s:1,d:90,c:['Nur mit leichtem Gewicht, etwa 4 bis 8 kg, und nur an schmerzfreien Tagen','Wirbel für Wirbel abrollen, das Gewicht zieht die Arme nach unten','Unten zwei Atemzüge, Knie gestreckt aber nicht überstreckt','Langsam aufrollen. Bei Schmerz im unteren Rücken die Variante ohne Gewicht wählen'],p:[121,83,116,74,92,52,115,84,113,92,112,84,110,92,93,76,94,100,91,76,92,100,112,52],pr:[['kb',112,97]]},
+{id:'kb_ankle',n:'Sprunggelenk mit Gewicht auf dem Knie',z:['waden'],eq:'gewicht',t:'mob',s:2,d:60,c:['Halber Kniestand, Gewicht auf das vordere Knie stellen und festhalten','Knie über die kleinen Zehen nach vorn schieben','Ferse bleibt fest am Boden','Am Endpunkt 3 Sekunden bleiben, zurück, wiederholen'],p:[101,27,98,38,86,72,108,56,122,64,106,57,120,66,126,76,118,100,70,97,44,98],pr:[['kb',126,66]]},
+{id:'kb_pullover',n:'Pullover liegend',z:['schultern','bws','brust'],eq:'gewicht',t:'stretch',s:1,d:75,c:['Rückenlage, Füße aufgestellt, Gewicht mit beiden Händen über der Brust','Mit fast gestreckten Armen langsam hinter den Kopf absenken','Rippen und unterer Rücken bleiben am Boden','Hinten zwei Atemzüge dehnen lassen, dann zurück'],p:[43,91,54,92,90,93,40,81,26,86,42,83,28,88,112,70,116,100,110,71,114,100],pr:[['kb',21,90]]},
+{id:'box_hf',n:'Hüftbeuger-Stretch mit erhöhtem Fuß',z:['hueftbeuger','quads'],eq:'box',t:'stretch',s:2,d:90,c:['Hinteren Fußrücken auf Box oder Bank ablegen, Knie auf eine weiche Unterlage','Gesäß der hinteren Seite fest anspannen, Becken aufrichten','Oberkörper langsam aufrichten, kein Hohlkreuz','Sanftere Alternative zum Couch Stretch, Abstand zur Box regelt die Intensität'],p:[90,21,90,32,90,68,100,50,114,66,99,50,112,68,118,72,118,100,72,96,58,73],pr:[['box',36,77,30,26]]},
+{id:'box_pigeon',n:'Erhöhte Taube auf der Box',z:['gesaess'],eq:'box',t:'stretch',s:2,d:90,c:['Schienbein quer auf die Box legen, Knie und Fuß liegen beide auf','Standbein nach hinten, Becken zeigt gerade zur Box','Mit langem Rücken nach vorn lehnen','Schont das Knie deutlich mehr als die Taube am Boden'],p:[125,21,118,30,96,54,125,44,138,58,122,45,134,59,124,57,106,58,94,78,92,100],pr:[['box',100,62,54,41]]},
+{id:'box_tspine',n:'BWS- und Lat-Stretch an der Bank',z:['schultern','bws','brust'],eq:'box',t:'stretch',s:1,d:75,c:['Vor der Bank knien, beide Ellbogen schulterbreit auflegen','Hände Richtung Nacken, optional einen Stab halten','Gesäß nach hinten schieben und die Brust Richtung Boden sinken lassen','Rippen eingezogen lassen, die Streckung kommt aus dem oberen Rücken'],p:[121,85,116,74,84,70,130,64,124,49,128,65,122,50,84,97,58,98,82,97,56,99,100,77],pr:[['box',122,67,40,36]]},
+{id:'box_ham',n:'Hamstring-Stretch mit Ferse auf der Box',z:['hams','waden'],eq:'box',t:'stretch',s:2,d:60,c:['Eine Ferse auf die Box, Bein gestreckt, Zehen zeigen nach oben','Hände an die Hüften, Standbein leicht gebeugt','Mit geradem Rücken aus der Hüfte nach vorn kippen','Brustbein Richtung Fußspitze, nicht den Rücken runden'],p:[122,23,114,30,92,52,104,44,96,52,102,45,94,53,109,65,127,78,92,76,92,100],pr:[['box',112,81,38,22]]},
+{id:'bar_hang',n:'Passives Aushängen',z:['schultern','bws','lws'],eq:'stange',t:'stretch',s:1,d:40,c:['Stange schulterbreit greifen und den Körper lang hängen lassen','Schultern dürfen Richtung Ohren wandern, ruhig weiteratmen','Bei Schulterschmerz die Füße am Boden oder auf einer Box lassen und nur einen Teil des Gewichts abgeben','Lieber mehrere kurze Durchgänge als einen bis zum Griffversagen'],p:[105,22,100,30,100,62,101,14,101,-1,99,14,99,-1,105,82,96,97,103,83,93,98],pr:[['bar',100,-4]]},
+{id:'bar_scap',n:'Aktives Hängen',z:['schultern','bws'],eq:'stange',t:'akt',s:1,d:40,c:['Aus dem passiven Hang, Arme bleiben gestreckt','Schulterblätter nach unten ziehen, der Körper hebt sich wenige Zentimeter','2 Sekunden halten, kontrolliert wieder lang werden','Keine Beugung im Ellbogen, kein Schwung'],p:[105,19,100,27,100,59,101,12,101,-1,99,12,99,-1,105,79,96,94,103,80,93,95],pr:[['bar',100,-4]]}
+];
+const BYID=Object.fromEntries(EX.map(e=>[e.id,e]));
+const ROUT=[
+ {id:'morgen',n:'Morgenroutine',d:'Einmal alles durchbewegen, ohne Equipment.',x:['cat_cow','worlds','deep_squat','thread','hip_cars','neck_cars']},
+ {id:'desk',n:'Schreibtisch-Pause',d:'Gegenprogramm zum Sitzen, im Büro machbar.',x:['chin_tuck','neck_side','pec_wall','hf_lunge','side_bend']},
+ {id:'sitz',n:'Hüft-Reset nach dem Sitztag',d:'Hüftbeuger öffnen, Gesäß lösen und wieder ansteuern.',x:['roll_glute','roll_quad','couch','pigeon','s9090','glute_bridge']},
+ {id:'schulter',n:'Schulter und Nacken',d:'Lösen, aufrichten, Schulterblatt aktivieren.',x:['ball_trap','ball_pec','roll_bws','lev_scap','wall_angel','band_pull','chin_tuck']},
+ {id:'tennis',n:'Vor dem Tennis',d:'Nur aktive Mobilisation, kein langes Halten.',x:['shoulder_cars','thread','worlds','cossack','hip_cars','knee_wall']},
+ {id:'crossfit',n:'Nach dem CrossFit',d:'Release und lange Dehnungen zum Runterfahren.',x:['roll_bws','roll_lat','roll_quad','roll_glute','couch','pigeon','elephant','childs']}
+];
+const TESTS=[
+ {id:'fba',n:'Finger-Boden-Abstand',h:'Stand, Knie gestreckt, vorbeugen. Abstand Fingerspitzen bis Boden, 0 = Boden berührt.',u:'cm',better:-1},
+ {id:'ktw',n:'Knie zur Wand',h:'Größter Abstand Zehen bis Wand, bei dem das Knie die Wand mit Ferse am Boden erreicht.',u:'cm',better:1,lr:1},
+ {id:'apl',n:'Schürzengriff',h:'Eine Hand von oben, eine von unten hinter den Rücken. Abstand der Fingerspitzen, Seite = obere Hand.',u:'cm',better:-1,lr:1},
+ {id:'squat',n:'Tiefe Hocke',h:'Fersen am Boden, ohne Festhalten. Haltezeit bis maximal 120 Sekunden.',u:'s',better:1},
+ {id:'thomas',n:'Hüftbeuger-Test',h:'Rückenlage an der Bettkante, ein Knie zur Brust. Bleibt der andere Oberschenkel auf der Unterlage und das Knie gebeugt?',u:'0–3',better:1,lr:1},
+ {id:'s90',n:'90/90 aufrecht sitzen',h:'Im 90/90-Sitz ohne Hände aufrecht sitzen. Seite = vorderes Bein.',u:'0–3',better:1,lr:1},
+ {id:'wall',n:'Wall Angel',h:'Bleiben Handrücken, Ellbogen und unterer Rücken an der Wand?',u:'0–3',better:1},
+ {id:'rot',n:'Nackenrotation',h:'Kinn Richtung Schulter drehen, ohne den Rumpf mitzunehmen.',u:'0–3',better:1,lr:1}
+];
+
+/* ---------- Zustand ---------- */
+const KEY='gelenkwerk.v1';
+let S={updated:0,history:[],tests:[],cfg:{zones:['hueftbeuger','gesaess','hams','lws','schultern','nacken'],min:15,eq:['ball','band','roll'],focus:true}};
+try{const r=JSON.parse(localStorage.getItem(KEY)||'null'); if(r&&r.cfg) S=r;}catch(e){}
+const EQV=2; function migrate(){ if(S.eqv!==EQV){ S.cfg.eq=Object.keys(EQ); S.eqv=EQV; } } migrate();
+const $=id=>document.getElementById(id);
+const CFG=window.GW_CONFIG||{}, SB=!!(CFG.supabaseUrl&&CFG.supabaseKey), AKEY='gelenkwerk.auth';
+let AUTH=null; try{AUTH=JSON.parse(localStorage.getItem(AKEY)||'null');}catch(e){}
+let pushT=null, syncMsg='';
+function localSave(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
+function status(t){ syncMsg=t; const el=$('sync'); if(el) el.textContent=t; }
+function save(){ S.updated=Date.now(); S.history=S.history.slice(-400); localSave();
+  if(SB&&AUTH){ clearTimeout(pushT); pushT=setTimeout(()=>push().catch(()=>status('Offline, wird später gesichert')),1500); } }
+async function sb(path,opt){ opt=opt||{}; const h=Object.assign({apikey:CFG.supabaseKey,'Content-Type':'application/json'},opt.headers||{});
+  if(AUTH&&opt.auth!==false) h.Authorization='Bearer '+AUTH.access_token;
+  const r=await fetch(CFG.supabaseUrl.replace(/\/$/,'')+path,{method:opt.method||'GET',headers:h,body:opt.body}); const t=await r.text(); let j=null; try{j=t?JSON.parse(t):null;}catch(e){}
+  if(!r.ok){ const e=new Error((j&&(j.msg||j.error_description||j.message))||('Fehler '+r.status)); e.status=r.status; throw e; } return j; }
+function setAuth(j){ AUTH=j&&j.access_token?{access_token:j.access_token,refresh_token:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000,uid:j.user.id,email:j.user.email}:null;
+  try{ AUTH?localStorage.setItem(AKEY,JSON.stringify(AUTH)):localStorage.removeItem(AKEY); }catch(e){} }
+async function fresh(){ if(AUTH&&Date.now()>AUTH.exp-60000){ try{ setAuth(await sb('/auth/v1/token?grant_type=refresh_token',{method:'POST',auth:false,body:JSON.stringify({refresh_token:AUTH.refresh_token})})); }
+  catch(e){ if(e.status===400||e.status===401){ setAuth(null); renderKonto(); } throw e; } } }
+function merge(a,b){ const by=(x,y)=>{ const m=new Map(); [...(x||[]),...(y||[])].forEach(i=>m.set(i.ts,i)); return [...m.values()].sort((p,q)=>p.ts-q.ts); };
+  const n=(a.updated||0)>=(b.updated||0)?a:b; return Object.assign({},n,{history:by(a.history,b.history),tests:by(a.tests,b.tests)}); }
+async function push(){ await fresh(); if(!AUTH) return;
+  await sb('/rest/v1/gw_state?on_conflict=user_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({user_id:AUTH.uid,data:S,updated_at:new Date().toISOString()})});
+  status('Im Konto gesichert'); }
+async function pull(){ await fresh(); if(!AUTH) return;
+  const rows=await sb('/rest/v1/gw_state?select=data&user_id=eq.'+AUTH.uid); const d=rows&&rows[0]&&rows[0].data;
+  if(d&&d.cfg){ const before=JSON.stringify([S.history,S.tests]); S=merge(S,d); migrate(); localSave(); renderAll(); if(JSON.stringify([d.history,d.tests])!==JSON.stringify([S.history,S.tests])||before!==JSON.stringify([S.history,S.tests])) await push(); else status('Im Konto gesichert'); }
+  else await push(); }
+async function login(mode){ const email=$('k-mail').value.trim(), pw=$('k-pw').value, msg=$('k-msg');
+  if(!email||pw.length<8){ msg.textContent='E-Mail und ein Passwort mit mindestens 8 Zeichen eingeben.'; return; }
+  msg.textContent='Einen Moment …';
+  try{ const j=await sb(mode==='signup'?'/auth/v1/signup':'/auth/v1/token?grant_type=password',{method:'POST',auth:false,body:JSON.stringify({email,password:pw})});
+    if(j&&j.access_token){ setAuth(j); renderKonto(); await pull(); }
+    else msg.textContent='Konto angelegt. Bestätige den Link in der E-Mail und melde dich danach hier an.';
+  }catch(e){ msg.textContent=/invalid login/i.test(e.message)?'E-Mail oder Passwort stimmt nicht.':/already registered/i.test(e.message)?'Für diese E-Mail gibt es schon ein Konto. Bitte anmelden.':'Das hat nicht geklappt: '+e.message; } }
+function renderKonto(){ const el=$('konto'); if(!el) return; let h='<h2>Konto und Daten</h2>';
+  if(!SB) h+='<p class="sub">Die Kontoanmeldung ist noch nicht eingerichtet. Verlauf und Tests liegen nur auf diesem Gerät.</p>';
+  else if(AUTH) h+=`<p>Angemeldet als <b>${AUTH.email.replace(/[<&]/g,'')}</b></p><p class="sub" style="margin-block:4px 10px">Verlauf, Tests und Einstellungen werden im Konto gesichert und auf jedem Gerät geladen, auf dem du dich anmeldest.</p><div class="chips"><button class="chip" id="k-out">Abmelden</button></div>`;
+  else h+=`<p class="sub" style="margin-bottom:10px">Mit Konto sind Verlauf und Tests gesichert und auf mehreren Geräten verfügbar. Ohne Konto bleiben sie nur auf diesem Gerät.</p><form id="k-form" class="list" style="max-width:360px"><input id="k-mail" type="email" autocomplete="email" placeholder="E-Mail" aria-label="E-Mail"><input id="k-pw" type="password" autocomplete="current-password" placeholder="Passwort" aria-label="Passwort"><div class="row"><button class="btn" type="submit">Anmelden</button><button class="btn ghost" type="button" id="k-new">Registrieren</button></div><p class="sub" id="k-msg" role="status"></p></form>`;
+  h+=`<div class="chips" style="margin-top:14px"><button class="chip" id="k-exp">Daten exportieren</button><label class="chip" style="cursor:pointer">Daten importieren<input id="k-imp" type="file" accept="application/json,.json" hidden></label></div><p class="sub" id="k-io" role="status" style="margin-top:6px"></p>`;
+  el.innerHTML=h; }
+document.addEventListener('submit',e=>{ if(e.target.id==='k-form'){ e.preventDefault(); login('login'); } });
+document.addEventListener('click',e=>{ const id=e.target.id;
+  if(id==='k-new') login('signup');
+  if(id==='k-out'){ setAuth(null); status(''); renderKonto(); }
+  if(id==='k-exp'){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,1)],{type:'application/json'})); a.download='gelenkwerk-daten.json'; document.body.appendChild(a); a.click(); a.remove(); $('k-io').textContent='Datei gelenkwerk-daten.json wurde gespeichert.'; } });
+document.addEventListener('change',e=>{ if(e.target.id!=='k-imp'||!e.target.files[0]) return; const fr=new FileReader();
+  fr.onload=()=>{ try{ const d=JSON.parse(fr.result); if(!d||!d.cfg||!Array.isArray(d.history)) throw 0; S=merge(S,d); migrate(); save(); renderAll(); $('k-io').textContent='Daten importiert und mit den vorhandenen zusammengeführt.'; }catch(x){ $('k-io').textContent='Diese Datei ist kein Gelenkwerk-Export.'; } };
+  fr.readAsText(e.target.files[0]); });
+window.addEventListener('load',()=>{ if(SB&&AUTH) pull().catch(()=>status('Offline, Daten vom Gerät')); if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&SB&&AUTH&&!P) pull().catch(()=>{}); });
+
+/* ---------- Zeichnungen ---------- */
+const hams=[['L1t',.5],['L2t',.5]], sq={k1:16,k2:-16,f1:10,f2:-10,e1:10,e2:-10,h1:2,h2:-2};
+const X2={
+couch:{v:'front',hl:[['L2t',.12],['L2t',.6]],f:'Leiste und Oberschenkelvorderseite des hinteren Beins'},
+hf_lunge:{v:'front',z:{e1:-10,h1:-14,e2:10,h2:10},hl:[['L2t',.12]],f:'Leiste des hinteren Beins bis in den Bauch'},
+worlds:{v:'top',sa:[0,-8,6],z:{e1:10,h1:12,e2:-5,h2:-4},hl:[['L2t',.1],['T',.2],['L1t',.35]],f:'Leiste hinten, Oberschenkelinnenseite vorn, Drehung im oberen Rücken'},
+pigeon:{v:'top',z:{k1:14,f1:-8},hl:[['L1t',.15]],f:'Gesäß außen auf der Seite des vorderen Beins'},
+fig4:{v:'top',z:{k1:22,f1:-6,h1:-2,h2:-8,e1:12,e2:-12},hl:[['L1t',.15]],f:'Gesäß des gekreuzten Beins'},
+s9090:{v:'top',z:{k1:[122,10],f1:[124,-16],k2:[100,-30],f2:[74,-32],h1:[112,16],e2:-12,h2:[82,-18]},hl:[['L1t',.1],['L2t',.1]],f:'Gesäß außen am vorderen Bein, Leiste und Hüftinnenseite am hinteren'},
+frog:{v:'top',z:{k1:28,f1:28,k2:-28,f2:-28,e1:12,h1:8,e2:-12,h2:-8},hl:[['L1t',.5],['L2t',.5]],f:'Innenseite beider Oberschenkel'},
+cossack:{v:'side',z:{p:-10,n:4,hd:8,h1:20,h2:20,e1:12,e2:12,k2:16},hl:[['L1t',.45],['L2t',.1]],f:'Innenseite des gestreckten Beins, Gesäß des gebeugten'},
+deep_squat:{v:'front',z:sq,hl:[['L1t',.15],['L2t',.15],['L1s',.85]],f:'Leisten, Gesäß und Sprunggelenke'},
+jefferson:{v:'front',hl:[['L1t',.5],['T',.8]],f:'Oberschenkelrückseite und die gesamte Rückenlinie'},
+ham_band:{v:'top',z:{h1:8,h2:2,e1:12,e2:-8},hl:[['L1t',.5],['L1s',.4]],f:'Rückseite des angehobenen Beins bis in die Wade'},
+elephant:{v:'front',hl:[['L1t',.5],['L1s',.4]],f:'Rückseite des gestreckten Beins'},
+good_morning:{v:'front',z:{e1:16,e2:-16,h1:4,h2:-4},hl:hams,f:'Oberschenkelrückseite beidseits'},
+roll_glute:{v:'top',z:{k1:[112,22],f1:[118,-6],h1:12,h2:-12},hl:[['L1t',.05]],f:'Druckpunkt mitten im Gesäß des gekreuzten Beins'},
+roll_ham:{v:'top',hl:[['L1t',.6],['L2t',.6]],f:'Druck auf der Oberschenkelrückseite'},
+roll_calf:{v:'top',hl:[['L1s',.5],['L2s',.5]],f:'Druck in der Wadenmitte'},
+roll_quad:{v:'top',z:{e1:12,h1:8,e2:-12,h2:-8},hl:hams,f:'Druck auf der Oberschenkelvorderseite'},
+roll_bws:{v:'top',z:{e1:18,e2:-18,h1:6,h2:-6},hl:[['T',.25]],f:'Druck und Streckung zwischen den Schulterblättern'},
+roll_lat:{v:'top',sa:[0,-9,0],ha:[0,-6,0],z:{e1:0,h1:0,e2:8,h2:16,k1:0,f1:0,k2:18,f2:14},hl:[['T',.2]],f:'Druck seitlich am Rücken unterhalb der Achsel'},
+ball_glute:{v:'front',hl:[['L1t',.05]],f:'Druckpunkt seitlich hinten im Gesäß'},
+ball_tfl:{v:'top',z:{e1:12,h1:8,e2:-12,h2:-8},hl:[['L1t',.05]],f:'Druck vorn an der Hüfte, knapp unter dem Beckenknochen'},
+ball_pec:{v:'front',z:{e2:-16,h2:-18},hl:[['A2u',.05]],f:'Druck im Brustmuskel nahe der Schulter'},
+ball_trap:{v:'front',hl:[['A1u',0]],f:'Druck zwischen Nacken und Schulterblatt'},
+ball_foot:{v:'front',hl:[['L1s',1]],f:'Fußsohle'},
+cat_cow:{v:'top',hl:[['T',.5]],f:'Gesamte Wirbelsäule, vor allem unterer Rücken'},
+childs:{v:'top',z:{e1:8,h1:8,e2:-8,h2:-8,k1:10,k2:-10},hl:[['T',.85],['A1u',.2],['A2u',.2]],f:'Unterer Rücken und Flanken bis unter die Achseln'},
+thread:{v:'top',sa:[0,-8,5],z:{e1:7,h1:9},hl:[['T',.25]],f:'Drehung zwischen den Schulterblättern'},
+open_book:{v:'top',sa:[0,-9,0],ha:[0,-6,0],z:{k1:[92,24],f1:[116,26],k2:[92,24],f2:[116,26],e2:[56,12],h2:[58,28],e1:[56,-12],h1:[58,-28]},hl:[['T',.2],['A1u',.15]],f:'Brust und Schultervorderseite des oberen Arms, Drehung im oberen Rücken'},
+cobra:{v:'top',z:{e1:12,h1:12,e2:-12,h2:-12},hl:[['T',.5],['T',.9]],f:'Bauch und Leisten, leichter Druck im unteren Rücken ist normal'},
+twist:{v:'top',z:{k1:[100,-24],f1:[118,-26],e1:[52,20],h1:[54,34],e2:[66,-14],h2:[86,-20]},hl:[['T',.8],['L1t',.15]],f:'Unterer Rücken und Gesäß außen des oberen Beins'},
+knees_chest:{v:'top',hl:[['T',.85]],f:'Unterer Rücken'},
+side_bend:{v:'side',hl:[['T',.5]],f:'Flanke von der Hüfte bis zur Achsel auf der gedehnten Seite'},
+wall_angel:{v:'side',z:{f1:8,f2:8,k1:5,k2:5},hl:[['T',.25]],f:'Arbeit zwischen den Schulterblättern, Dehnung in der Brust'},
+band_pass:{v:'side',hl:[['A1u',0]],f:'Schultervorderseite und Brust'},
+band_pull:{v:'side',hl:[['T',.2]],f:'Arbeit zwischen den Schulterblättern und in der hinteren Schulter'},
+band_lat:{v:'front',hl:[['T',.3],['A1u',.2]],f:'Seitlicher Rücken unterhalb der Achsel'},
+band_hip:{v:'front',hl:[['L2t',.1]],f:'Tief in der Leiste des hinteren Beins'},
+band_ankle:{v:'front',hl:[['L1s',.75]],f:'Untere Wade und Achillessehne des vorderen Beins'},
+knee_wall:{v:'front',hl:[['L1s',.75]],f:'Untere Wade und Achillessehne des vorderen Beins'},
+calf_stretch:{v:'front',hl:[['L2s',.4]],f:'Wade des hinteren Beins'},
+cross_body:{v:'side',z:{e1:10,h1:10,e2:12,h2:14},hl:[['A1u',.1]],f:'Hintere Schulter des gestreckten Arms'},
+pec_wall:{v:'front',z:{e1:24,h1:24},hl:[['A1u',0]],f:'Brustmuskel und Schultervorderseite'},
+neck_side:{v:'side',hl:[['N',.4]],f:'Seitlicher Nacken auf der Gegenseite der Neigung'},
+lev_scap:{v:'side',z:{hd:7},hl:[['N',.3]],f:'Hinten seitlich vom Nacken bis zum Schulterblatt'},
+chin_tuck:{v:'front',hl:[['N',.4]],f:'Arbeit der tiefen Halsmuskeln vorn, Länge im Nacken'},
+neck_cars:{v:'side',hl:[['N',.5]],f:'Rundum im Nacken'},
+shoulder_cars:{v:'front',z:{e1:12,h1:12},hl:[['A1u',0]],f:'Rund um das Schultergelenk'},
+hip_cars:{v:'top',z:{k1:[88,26],f1:[66,24]},hl:[['L1t',.05]],f:'Arbeit rund um das Hüftgelenk und im Gesäß'},
+glute_bridge:{v:'top',hl:[['L1t',.1],['L2t',.1]],f:'Arbeit im Gesäß, Dehnung vorn in den Leisten'},
+prone_y:{v:'top',z:{e1:[140,16],h1:[156,24],e2:[140,-16],h2:[156,-24]},hl:[['T',.15]],f:'Arbeit zwischen und unter den Schulterblättern'},
+wrist:{v:'top',hl:[['A1f',.6],['A2f',.6]],f:'Unterarm-Innenseite, im zweiten Teil die Außenseite'},
+prayer:{v:'side',z:{h1:14,h2:14,e1:6,e2:6},hl:[['A1f',.7],['A2f',.7]],f:'Unterarme und Handgelenke'},
+stab_pass:{v:'side',hl:[['A1u',0]],f:'Schultervorderseite und Brust'},
+stab_rot:{v:'side',z:{h1:10},hl:[['A1u',0]],f:'Tief in der Schulter, vorn und hinten'},
+stab_ohs:{v:'front',z:{k1:14,k2:-14,f1:10,f2:-10,e1:18,h1:26,e2:-18,h2:-26},hl:[['T',.25],['A1u',0],['A2u',0]],f:'Oberer Rücken, Schultern, Hüften und Sprunggelenke'},
+stab_hinge:{v:'front',hl:hams,f:'Oberschenkelrückseite beidseits'},
+kb_goblet:{v:'front',z:sq,hl:[['L1t',.15],['L2t',.15],['L1s',.85]],f:'Leisten, Gesäß und Sprunggelenke'},
+kb_halo:{v:'side',hl:[['A1u',0]],f:'Rund um beide Schultern'},
+kb_jefferson:{v:'front',hl:[['L1t',.5],['T',.8]],f:'Oberschenkelrückseite und die gesamte Rückenlinie'},
+kb_ankle:{v:'front',hl:[['L1s',.75]],f:'Untere Wade und Achillessehne des vorderen Beins'},
+kb_pullover:{v:'top',z:{e1:8,h1:3,e2:-8,h2:-3},hl:[['A1u',.1],['A2u',.1],['T',.2]],f:'Seitlicher Rücken, Achseln und Brust'},
+box_hf:{v:'front',hl:[['L2t',.12],['L2t',.6]],f:'Leiste und Oberschenkelvorderseite des hinteren Beins'},
+box_pigeon:{v:'front',z:{k1:18,f1:-10},hl:[['L1t',.15]],f:'Gesäß außen auf der Seite des aufgelegten Beins'},
+box_tspine:{v:'top',z:{e1:8,h1:8,e2:-8,h2:-8},hl:[['T',.25],['A1u',.4],['A2u',.4]],f:'Oberer Rücken, Achseln und Trizeps'},
+box_ham:{v:'front',hl:[['L1t',.5],['L1s',.3]],f:'Rückseite des aufgestellten Beins'},
+bar_hang:{v:'front',z:{e1:11,h1:11,e2:-11,h2:-11},hl:[['A1u',0],['A2u',0],['T',.45]],f:'Achseln, seitlicher Rücken, Länge in der Wirbelsäule'},
+bar_scap:{v:'front',z:{e1:11,h1:11,e2:-11,h2:-11},hl:[['T',.25]],f:'Arbeit unter und zwischen den Schulterblättern'}
+};
+const SEG={T:['n','p'],N:['n','hd'],A1u:['s1','e1'],A1f:['e1','h1'],A2u:['s2','e2'],A2f:['e2','h2'],L1t:['q1','k1'],L1s:['k1','f1'],L2t:['q2','k2'],L2s:['k2','f2']};
+function ptsA(ex){ const p=ex.p, g=i=>[p[i],p[i+1]]; const R={hd:g(0),n:g(2),p:g(4),s1:g(2),s2:g(2),q1:g(4),q2:g(4),e1:g(6),h1:g(8),e2:g(10),h2:g(12),k1:g(14),f1:g(16),k2:g(18),f2:g(20)};
+  if(X2[ex.id].v==='side'){ const sg=R.e1[0]>=R.e2[0]?1:-1, lg=R.k1[0]>=R.k2[0]?1:-1; R.s1=[R.n[0]+9*sg,R.n[1]+2]; R.s2=[R.n[0]-9*sg,R.n[1]+2]; R.q1=[R.p[0]+5*lg,R.p[1]]; R.q2=[R.p[0]-5*lg,R.p[1]]; }
+  else if(p.length>22) R.m=[.25*p[2]+.5*p[22]+.25*p[4],.25*p[3]+.5*p[23]+.25*p[5]];
+  return R; }
+function ptsB(ex){ const m=X2[ex.id], v=m.v, A=ptsA(ex), z=m.z||{}, F=v==='side';
+  const dz={e1:10,h1:10,e2:-10,h2:-10,k1:6,f1:6,k2:-6,f2:-6};
+  const sa=m.sa||(F?[0,0,0]:[0,0,10]), ha=m.ha||(F?[0,0,0]:[0,0,6]);
+  const pr=(x,y,zz)=>v==='top'?[x,50+zz*1.25]:v==='front'?[100+zz*1.3,y]:[100+zz,y];
+  const R={}, D={}; for(const k of ['hd','n','p','e1','h1','e2','h2','k1','f1','k2','f2']){ let x=A[k][0], y=A[k][1], zz=F?0:(dz[k]||0); const o=z[k]; if(Array.isArray(o)){x=o[0];zz=o[1];} else if(o!=null) zz=o; D[k]=[x,y,zz]; R[k]=pr(x,y,zz); }
+  const off=(k,q,s)=>pr(D[k][0]+q[0]*s,D[k][1]+q[1]*s,D[k][2]+q[2]*s);
+  R.s1=off('n',sa,1); R.s2=off('n',sa,-1); R.q1=off('p',ha,1); R.q2=off('p',ha,-1); return R; }
+const lab=t=>`<text x="7" y="3" font-size="8.5" letter-spacing=".6" fill="var(--muted)" font-family="Barlow,sans-serif">${t.toUpperCase()}</text>`;
+const SIDES={couch:'ff',hf_lunge:'f',worlds:'fb-',pigeon:'b',fig4:'b',s9090:'bf',deep_squat:'--b',jefferson:'bb',ham_band:'bb',elephant:'bb',good_morning:'bb',roll_glute:'b',roll_ham:'bb',roll_calf:'bb',roll_quad:'ff',roll_bws:'b',ball_glute:'b',ball_tfl:'f',cat_cow:'b',childs:'b--',thread:'b',cobra:'ff',twist:'bb',knees_chest:'b',band_hip:'f',band_ankle:'b',knee_wall:'b',calf_stretch:'b',hip_cars:'b',glute_bridge:'bb',prone_y:'b',stab_ohs:'b--',stab_hinge:'bb',kb_goblet:'--b',kb_jefferson:'bb',kb_ankle:'b',box_hf:'ff',box_pigeon:'b',box_tspine:'b--',box_ham:'bb',bar_scap:'b'};
+for(const id in X2){ const s=SIDES[id]||''; X2[id].hl=X2[id].hl.map((h,i)=>[h[0],h[1],s[i]==='f'||s[i]==='b'?s[i]:'']); }
+const lerp=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t], r1=x=>Math.round(x*10)/10, dist=(a,b)=>Math.hypot(b[0]-a[0],b[1]-a[1]);
+function nrm(a,b){ const l=dist(a,b)||1; return [(b[1]-a[1])/l,-(b[0]-a[0])/l]; }
+const OUT='stroke="var(--surface2)" stroke-width="1"';
+function cap(a,b,ra,rb,fill){ if(dist(a,b)<1) return `<circle cx="${r1(a[0])}" cy="${r1(a[1])}" r="${Math.max(ra,rb)}" fill="${fill}" ${OUT}/>`;
+  const n=nrm(a,b), o=(p,r,s)=>r1(p[0]+n[0]*r*s)+','+r1(p[1]+n[1]*r*s);
+  return `<path d="M${o(a,ra,1)} L${o(b,rb,1)} A${rb},${rb} 0 0 1 ${o(b,rb,-1)} L${o(a,ra,-1)} A${ra},${ra} 0 0 1 ${o(a,ra,1)} Z" fill="${fill}" ${OUT}/>`; }
+function hlcap(a,b,ra,rb,t,side,span){ span=span||.24; const t0=Math.max(0,t-span), t1=Math.min(1,t+span), A=lerp(a,b,t0), B=lerp(a,b,t1), q0=ra+(rb-ra)*t0-.6, q1=ra+(rb-ra)*t1-.6;
+  if(dist(A,B)<2) return `<circle cx="${r1(A[0])}" cy="${r1(A[1])}" r="${Math.max(q0,q1)}" fill="var(--feel)"/>`;
+  const n=nrm(a,b), o=(p,r,s)=>r1(p[0]+n[0]*r*s)+','+r1(p[1]+n[1]*r*s), fs=side==='b'?0:1, bs=side==='f'?0:-1;
+  return `<polygon points="${o(A,q0,fs)} ${o(B,q1,fs)} ${o(B,q1,bs)} ${o(A,q0,bs)}" fill="var(--feel)" stroke="var(--feel)" stroke-width="1.2" stroke-linejoin="round"/>`; }
+const RAD={A1u:[3.6,3],A1f:[3,2.2],A2u:[3.6,3],A2f:[3,2.2],L1t:[5.8,4.3],L1s:[4.3,2.7],L2t:[5.8,4.3],L2s:[4.3,2.7],N:[2.8,2.8]};
+function body(ex,P,halves){ const hl=X2[ex.id].hl, C1='var(--fig)', C2='var(--fig2)';
+  const seg=(s,c)=>{ const a=P[SEG[s][0]], b=P[SEG[s][1]], [ra,rb]=RAD[s]; let o=cap(a,b,ra,rb,c); for(const h of hl) if(h[0]===s) o+=hlcap(a,b,ra,rb,h[1],halves?h[2]:''); return o; };
+  const end=(k,r,c)=>`<circle cx="${r1(P[k][0])}" cy="${r1(P[k][1])}" r="${r}" fill="${c}" ${OUT}/>`;
+  const limb=(u,l,e,r,c)=>seg(u,c)+seg(l,c)+end(e,r,c);
+  let o=limb('L2t','L2s','f2',3.1,C2)+limb('A2u','A2f','h2',2.7,C2);
+  const th=hl.filter(h=>h[0]==='T');
+  if(dist(P.s1,P.s2)<3){ const m=P.m||lerp(P.n,P.p,.5), pt=t=>t<.5?lerp(P.n,m,t*2):lerp(m,P.p,t*2-1);
+    o+=cap(P.n,m,7,5.6,C1)+cap(m,P.p,5.6,6.6,C1);
+    for(const h of th) o+=hlcap(pt(Math.max(0,h[1]-.2)),pt(Math.min(1,h[1]+.2)),5.9,5.9,.5,halves?h[2]:'',.5);
+  } else { const pg=a=>a.map(p=>r1(p[0])+','+r1(p[1])).join(' '), q=[P.s1,P.s2,P.q2,P.q1];
+    o+=`<polygon points="${pg(q)}" fill="var(--surface2)" stroke="var(--surface2)" stroke-width="9" stroke-linejoin="round"/><polygon points="${pg(q)}" fill="${C1}" stroke="${C1}" stroke-width="7" stroke-linejoin="round"/>`;
+    for(const h of th){ const a=Math.max(0,h[1]-.2), b=Math.min(1,h[1]+.2); o+=`<polygon points="${pg([lerp(P.s1,P.q1,a),lerp(P.s2,P.q2,a),lerp(P.s2,P.q2,b),lerp(P.s1,P.q1,b)])}" fill="var(--feel)" stroke="var(--feel)" stroke-width="4" stroke-linejoin="round"/>`; } }
+  o+=seg('N',C1)+`<circle cx="${r1(P.hd[0])}" cy="${r1(P.hd[1])}" r="6.3" fill="${C1}" ${OUT}/>`;
+  return o+limb('L1t','L1s','f1',3.1,C1)+limb('A1u','A1f','h1',2.7,C1); }
+const FLOOR=`<line x1="6" y1="104" x2="194" y2="104" stroke="var(--prop)" stroke-width="2" stroke-linecap="round"/>`;
+function fig(ex,cls){ let b='',f='';
+  for(const q of (ex.pr||[])){
+    if(q[0]==='wall') b+=`<rect x="${q[1]}" y="-6" width="5" height="109" fill="var(--prop)"/>`;
+    if(q[0]==='roll') b+=`<circle cx="${q[1]}" cy="${q[2]}" r="${q[3]}" fill="var(--prop)" stroke="var(--accent)" stroke-width="2.5"/><circle cx="${q[1]}" cy="${q[2]}" r="${q[3]*.4}" fill="var(--surface2)"/>`;
+    if(q[0]==='box') b+=`<rect x="${q[1]}" y="${q[2]}" width="${q[3]}" height="${q[4]}" rx="3" fill="var(--prop)" stroke="var(--fig2)" stroke-width="1.5"/>`;
+    if(q[0]==='bar') b+=`<line x1="${q[1]-26}" y1="${q[2]}" x2="${q[1]+26}" y2="${q[2]}" stroke="var(--fig2)" stroke-width="4" stroke-linecap="round"/>`;
+    if(q[0]==='ball') f+=`<circle cx="${q[1]}" cy="${q[2]}" r="${q[3]}" fill="var(--accent)"/>`;
+    if(q[0]==='band') f+=`<line x1="${q[1]}" y1="${q[2]}" x2="${q[3]}" y2="${q[4]}" stroke="var(--warm)" stroke-width="3" stroke-linecap="round"/>`;
+    if(q[0]==='stick') f+=`<line x1="${q[1]}" y1="${q[2]}" x2="${q[3]}" y2="${q[4]}" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>`;
+    if(q[0]==='kb') f+=`<circle cx="${q[1]}" cy="${q[2]-7}" r="3.5" fill="none" stroke="var(--accent)" stroke-width="2"/><circle cx="${q[1]}" cy="${q[2]}" r="6" fill="var(--accent)"/>`;
+    if(q[0]==='dot') f+=`<circle cx="${q[1]}" cy="${q[2]}" r="3.5" fill="var(--warm)"/>`;
+    if(q[0]==='arc') f+=`<circle cx="${q[1]}" cy="${q[2]}" r="${q[3]}" fill="none" stroke="var(--warm)" stroke-width="2" stroke-dasharray="4 4"/>`;
+  }
+  const F=X2[ex.id].v==='side';
+  return `<svg class="figbox ${cls||''}" viewBox="0 -8 200 116" role="img" aria-label="Zeichnung ${ex.n}">${b}${FLOOR}${body(ex,ptsA(ex),!F)}${f}${lab(F?'Von vorn':'Seite')}</svg>`; }
+function figB(ex){ const v=X2[ex.id].v;
+  return `<svg class="figbox" viewBox="0 -8 200 116" role="img" aria-label="Zweite Ansicht ${ex.n}">${v==='top'?'':FLOOR}${body(ex,ptsB(ex),false)}${lab(v==='top'?'Von oben':v==='front'?'Von vorn':'Seite')}</svg>`; }
+const figs=ex=>`<div class="figs">${fig(ex)}${figB(ex)}</div>`;
+const feel=(ex,p)=>(p?'':'<p class="feel">')+`<i></i>Spürbar: ${X2[ex.id].f}`+(p?'':'</p>');
+
+
+function bodymap(back){ const H=[];
+  const add=(z,d,solo)=>{ const a=z?`class="bm-z" data-z="${z}"`:'class="bm-base"'; H.push(`<path ${a} d="${d}"/>`); if(!solo) H.push(`<path ${a} d="${d}" transform="translate(140,0) scale(-1,1)"/>`); };
+  H.push('<ellipse class="bm-base" cx="70" cy="21" rx="12.5" ry="15.5"/>');
+  add('schultern','M57,47 C47,46 39,51 37,61 C36,69 39,75 43,79 C46,71 50,63 57,57 Z');
+  add('','M37,64 C32,73 30,85 31,97 L42,99 C45,91 46,84 44,80 C41,75 38,70 37,64 Z');
+  add('unterarme','M31,100 C27,110 25,122 25,135 L33,137 C38,125 42,112 42,102 Z');
+  add('','M25,138 C22,144 22,152 26,157 C31,156 34,148 33,140 Z');
+  add('','M48,188 L62,189 L61,199 L49,199 Z');
+  add('','M50,255 L59,255 C61,261 61,266 58,269 L46,269 C45,264 47,259 50,255 Z');
+  if(back){
+    add('nacken','M63,35 L77,35 C78,42 84,46 92,49 L70,56 L48,49 C56,46 62,42 63,35 Z',1);
+    add('bws','M69,58 L58,55 L59,59 C53,64 49,72 48,80 C52,92 60,99 69,101 Z');
+    add('lws','M69,103 C62,101 56,97 51,91 C50,100 51,110 53,118 L69,118 Z');
+    add('gesaess','M69,120 L53,120 C48,129 48,141 52,149 C58,153 65,151 69,146 Z');
+    add('hams','M51,152 C47,164 47,177 49,187 L62,188 C64,176 66,163 68,150 C62,155 56,155 51,152 Z');
+    add('waden','M49,201 C44,213 46,233 51,253 L58,253 C62,235 64,215 61,201 Z');
+  } else {
+    add('nacken','M63,35 L77,35 L80,46 L70,49 L60,46 Z',1);
+    add('brust','M69,51 L59,48 L59,59 C53,64 49,70 48,76 C54,83 63,82 69,78 Z');
+    add('','M69,81 C63,85 54,85 48,80 C48,94 50,106 52,116 L69,122 Z');
+    add('hueftbeuger','M52,119 L69,125 L69,139 C62,137 55,132 50,126 Z');
+    add('quads','M49,129 C45,143 44,163 47,186 L60,187 C62,171 62,154 60,140 C56,137 52,133 49,129 Z');
+    add('adduktoren','M62,141 L69,142 L68,176 L62,186 C63,170 63,155 62,141 Z');
+    add('waden','M49,201 C46,215 47,233 51,253 L58,253 C61,235 62,217 61,201 Z');
+  }
+  return `<svg viewBox="14 2 112 270">${H.join('')}</svg>`; }
+
+/* ---------- Konfigurator ---------- */
+const chip=(label,on,attr)=>`<button class="chip" aria-pressed="${!!on}" ${attr}>${label}</button>`;
+const same=(a,b)=>a.length===b.length&&a.every(x=>b.includes(x));
+function renderCfg(){ const c=S.cfg, all=[...UPPER,...LOWER];
+  $('presets').innerHTML=chip('Full Body',same(c.zones,all),'data-p="all"')+chip('Oberkörper',same(c.zones,UPPER),'data-p="up"')+chip('Unterkörper',same(c.zones,LOWER),'data-p="low"');
+  $('maps').innerHTML=`<figure>${bodymap(0)}<figcaption>Vorn</figcaption></figure><figure>${bodymap(1)}<figcaption>Hinten</figcaption></figure>`;
+  document.querySelectorAll('#maps [data-z]').forEach(e=>e.classList.toggle('on',c.zones.includes(e.dataset.z)));
+  $('zonechips').innerHTML=all.map(z=>chip(Z[z],c.zones.includes(z),`data-z="${z}"`)).join('');
+  $('times').innerHTML=[5,8,12,15,22,30].map(m=>chip(m+' min',c.min===m,`data-m="${m}"`)).join('');
+  $('equip').innerHTML=Object.keys(EQ).map(k=>chip(EQ[k],c.eq.includes(k),`data-e="${k}"`)).join('');
+  $('gaps').innerHTML=[10,15,20,30].map(g=>chip(g+' s',gap()===g,`data-g="${g}"`)).join(''); $('sound').checked=c.sound!==false; $('focus').checked=c.focus; $('gen').disabled=!c.zones.length; }
+function toggle(arr,v){const i=arr.indexOf(v); i<0?arr.push(v):arr.splice(i,1);}
+$('v-einheit').addEventListener('click',e=>{ const t=e.target.closest('[data-z],[data-p],[data-m],[data-e],[data-g]'); if(!t) return; const c=S.cfg, d=t.dataset;
+  if(d.z) toggle(c.zones,d.z); else if(d.p) c.zones=d.p==='all'?[...UPPER,...LOWER]:d.p==='up'?[...UPPER]:[...LOWER];
+  else if(d.m) c.min=+d.m; else if(d.e) toggle(c.eq,d.e); else if(d.g) c.gap=+d.g;
+  save(); renderCfg(); });
+$('focus').addEventListener('change',e=>{S.cfg.focus=e.target.checked; save();});
+
+const gap=()=>S.cfg.gap||15, sideGap=()=>Math.max(8,gap()-5);
+const exTime=e=>e.d*e.s+gap()+(e.s===2?sideGap():0);
+function generate(){ const c=S.cfg; const pool=EX.filter(e=>(!e.eq||c.eq.includes(e.eq))&&e.z.some(z=>c.zones.includes(z)));
+  const zw=z=>c.focus&&PRIO.includes(z)?2:1; const cov={}; c.zones.forEach(z=>cov[z]=0);
+  let left=c.min*60, pick=[], used=new Set();
+  for(let guard=0;guard<80;guard++){
+    const zs=[...c.zones].sort((a,b)=>cov[a]/zw(a)-cov[b]/zw(b)+(Math.random()-.5)*20); let got=null;
+    for(const z of zs){ const cand=pool.filter(e=>!used.has(e.id)&&e.z.includes(z)&&exTime(e)<=left); if(cand.length){ got=cand[Math.floor(Math.random()*cand.length)]; break; } }
+    if(!got) break; used.add(got.id); pick.push(got); left-=exTime(got); got.z.forEach(z=>{if(z in cov) cov[z]+=got.d*got.s;}); }
+  pick.sort((a,b)=>TORDER[a.t]-TORDER[b.t]); return pick; }
+const fmt=s=>Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0');
+function planHTML(list,label){ if(!list.length) return `<p class="note">Für diese Auswahl passt keine Übung in die Zeit. Mehr Zeit oder weitere Zonen wählen.</p>`;
+  const tot=list.reduce((a,e)=>a+exTime(e),0);
+  return `<h2>${label} <span class="dur">${list.length} Übungen, ${Math.round(tot/60)} min</span></h2><div class="list">`+list.map(e=>`<div class="card ex slim">${fig(e)}<div><h3>${e.n}</h3><div class="dur">${T[e.t]} · ${e.s===2?'2 × '+e.d+' s je Seite':e.d+' s'}${e.eq?' · '+EQ[e.eq]:''}</div></div></div>`).join('')+`</div>`; }
+let current=null;
+function showPlan(target,list,label,remix){ current={list,label};
+  $(target).innerHTML=planHTML(list,label)+(list.length?`<div class="row" style="margin-top:14px">${remix?'<button class="btn ghost" data-a="remix">Neu mischen</button>':''}<button class="btn" data-a="start">Starten</button></div>`:'');
+  $(target).scrollIntoView({behavior:'smooth',block:'start'}); }
+$('gen').addEventListener('click',()=>showPlan('plan',generate(),'Deine Einheit',true));
+document.addEventListener('click',e=>{ const a=e.target.closest('[data-a]'); if(!a) return;
+  if(a.dataset.a==='remix') showPlan('plan',generate(),'Deine Einheit',true);
+  if(a.dataset.a==='start'&&current) startPlayer(current.list,current.label); });
+
+/* ---------- Routinen & Library ---------- */
+function renderRout(){ $('routines').innerHTML=ROUT.map(r=>{ const l=r.x.map(i=>BYID[i]); const eq=[...new Set(l.map(e=>e.eq).filter(Boolean))].map(k=>EQ[k]);
+  return `<button class="card" data-r="${r.id}" style="text-align:left"><h3>${r.n}</h3><p class="sub">${r.d}</p><p class="dur">${l.length} Übungen · ${Math.round(l.reduce((a,e)=>a+exTime(e),0)/60)} min · ${eq.length?eq.join(', '):'ohne Equipment'}</p></button>`;}).join(''); }
+$('routines').addEventListener('click',e=>{ const t=e.target.closest('[data-r]'); if(!t) return; const r=ROUT.find(x=>x.id===t.dataset.r); showPlan('rplan',r.x.map(i=>BYID[i]),r.n,false); });
+let libZ='';
+function renderLib(){ $('libfilter').innerHTML=chip('Alle',!libZ,'data-l=""')+Object.keys(Z).map(z=>chip(Z[z],libZ===z,`data-l="${z}"`)).join('');
+  const l=EX.filter(e=>!libZ||e.z.includes(libZ)); $('libcount').textContent=l.length+' von '+EX.length+' Übungen';
+  $('lib').innerHTML=l.map(e=>`<div class="card ex">${figs(e)}<div><h3>${e.n}</h3><div class="tags"><span class="t">${T[e.t]}</span>${e.eq?`<span>${EQ[e.eq]}</span>`:''}${e.z.map(z=>`<span>${Z[z]}</span>`).join('')}<span>${e.s===2?'2 × '+e.d+' s':e.d+' s'}</span></div><ul class="cues">${e.c.map(c=>`<li>${c}</li>`).join('')}</ul>${feel(e)}</div></div>`).join(''); }
+$('libfilter').addEventListener('click',e=>{ const t=e.target.closest('[data-l]'); if(!t) return; libZ=t.dataset.l; renderLib(); });
+
+/* ---------- Player ---------- */
+let P=null, actx=null, wake=null;
+const TONES={tick:[[880,.13]],go:[[660,.16],[990,.34]],end:[[990,.16],[660,.4]],done:[[660,.16],[880,.16],[1100,.5]]};
+const SND={};
+function wav(notes){ const sr=22050; let n=0; notes.forEach(x=>n+=Math.round(x[1]*sr)); const buf=new Uint8Array(44+n*2), dv=new DataView(buf.buffer); const W=(o,t)=>{for(let i=0;i<t.length;i++)buf[o+i]=t.charCodeAt(i);};
+  W(0,'RIFF');dv.setUint32(4,36+n*2,true);W(8,'WAVEfmt ');dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);W(36,'data');dv.setUint32(40,n*2,true);
+  let o=44; notes.forEach(([f,d])=>{ const m=Math.round(d*sr); for(let i=0;i<m;i++){ const env=Math.min(1,i/200,(m-i)/1200); dv.setInt16(o,Math.sin(2*Math.PI*f*i/sr)*env*27000,true); o+=2; } });
+  let t=''; for(let i=0;i<buf.length;i++) t+=String.fromCharCode(buf[i]); return 'data:audio/wav;base64,'+btoa(t); }
+function ensureAudio(){ try{actx=actx||new (window.AudioContext||window.webkitAudioContext)(); actx.resume();}catch(e){}
+  try{ for(const k in TONES) if(!SND[k]) SND[k]=new Audio(wav(TONES[k])); }catch(e){} }
+function fb(k){ let t=0; TONES[k].forEach(([f,d])=>{ setTimeout(()=>beep(f,d),t*1000); t+=d; }); }
+function snd(k){ if(S.cfg.sound===false) return;
+  try{ const a=SND[k]; if(!a) return fb(k); a.currentTime=0; const pr=a.play(); if(pr&&pr.catch) pr.catch(()=>fb(k)); }catch(e){ fb(k); }
+  if(k!=='tick') try{ navigator.vibrate&&navigator.vibrate(k==='done'?[200,100,200]:150); }catch(e){} }
+document.addEventListener('click',e=>{ if(e.target.id==='soundtest'){ ensureAudio(); S.cfg.sound=true; $('sound').checked=true; snd('go'); } });
+document.addEventListener('change',e=>{ if(e.target.id==='sound'){ S.cfg.sound=e.target.checked; save(); } });
+
+function beep(f,d){ try{ if(!actx) return; const o=actx.createOscillator(),g=actx.createGain(); o.frequency.value=f; o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(.5,actx.currentTime); g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+d); o.start(); o.stop(actx.currentTime+d);}catch(e){} }
+function startPlayer(list,label){ ensureAudio(); snd('tick');
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(w=>wake=w,()=>{});}catch(e){}
+  const segs=[]; list.forEach(e=>{ for(let k=0;k<e.s;k++) segs.push({e,side:e.s===2?(k?'Rechte Seite':'Linke Seite'):'',prep:k?sideGap():gap()}); });
+  P={segs,label,list,i:0,phase:'prep',paused:false,t0:Date.now()}; setSeg(0); $('player').hidden=false;
+  clearInterval(P.iv); P.iv=setInterval(tick,200); }
+function setSeg(i){ P.i=i; P.phase='prep'; P.rem=P.segs[i].prep*1000; P.end=Date.now()+P.rem; P.lastB=99; const s=P.segs[i];
+  $('pfig').innerHTML=figs(s.e); $('pfeel').innerHTML=feel(s.e,1); $('pname').textContent=s.e.n; $('pcues').innerHTML=s.e.c.map(c=>`<li>${c}</li>`).join('');
+  $('pcount').textContent=P.label+' · '+(P.list.indexOf(s.e)+1)+' von '+P.list.length;
+  const nx=P.segs.slice(i+1).find(x=>x.e!==s.e); $('pnextname').textContent=nx?'Danach: '+nx.e.n:'Letzte Übung';
+  $('pb').style.width=(i/P.segs.length*100)+'%'; draw(); }
+function draw(){ const s=P.segs[P.i]; $('pclock').textContent=fmt(Math.ceil(P.rem/1000)); $('pclock').classList.toggle('prep',P.phase==='prep');
+  $('pphase').innerHTML=(P.phase==='prep'?'Position einnehmen':T[s.e.t])+(s.side?` · <span class="side">${s.side}</span>`:''); }
+function tick(){ if(!P||P.paused) return; P.rem=P.end-Date.now(); const sec=Math.ceil(P.rem/1000);
+  const lim=P.phase==='prep'?3:5; if(sec<=lim&&sec>0&&sec<P.lastB){P.lastB=sec; snd('tick');}
+  if(P.rem<=0){ if(P.phase==='prep'){ P.phase='work'; P.rem=P.segs[P.i].e.d*1000; P.end=Date.now()+P.rem; P.lastB=99; snd('go'); }
+    else { if(P.i+1<P.segs.length){ snd('end'); setSeg(P.i+1); } else { snd('done'); return finish(true); } } }
+  draw(); }
+function finish(done){ clearInterval(P.iv); try{wake&&wake.release();}catch(e){} wake=null; $('player').hidden=true;
+  if(done){ const zs=[...new Set(P.list.flatMap(e=>e.z))]; S.history.push({ts:Date.now(),label:P.label,min:Math.max(1,Math.round((Date.now()-P.t0)/60000)),n:P.list.length,zones:zs}); save(); renderHist(); show('verlauf'); }
+  P=null; }
+$('ppause').addEventListener('click',()=>{ if(!P) return; P.paused=!P.paused; if(!P.paused) P.end=Date.now()+P.rem; $('ppause').textContent=P.paused?'Weiter­machen':'Pause'; });
+$('pnext').addEventListener('click',()=>{ if(!P) return; P.i+1<P.segs.length?setSeg(P.i+1):finish(true); });
+$('pprev').addEventListener('click',()=>{ if(P) setSeg(Math.max(0,P.i-(P.phase==='prep'?1:0))); });
+$('pquit').addEventListener('click',()=>{ if(P) finish(false); });
+
+/* ---------- Test ---------- */
+function renderTests(){ $('tests').innerHTML=TESTS.map(t=>`<div class="card test"><div><h3>${t.n}</h3><p class="sub">${t.h}</p></div><div class="ins">${(t.lr?['l','r']:['']).map(s=>`<input id="t-${t.id}${s}" type="number" inputmode="decimal" step="any" aria-label="${t.n} ${s==='l'?'links':s==='r'?'rechts':''} in ${t.u}" placeholder="${s?(s==='l'?'li':'re'):t.u}">`).join('')}</div></div>`).join('');
+  const h=S.tests; if(!h.length){ $('testhist').innerHTML='<p class="sub" style="margin-top:14px">Noch kein Test gespeichert. Der erste Eintrag ist deine Ausgangsbasis.</p>'; return; }
+  const last=h[h.length-1], first=h[0], rows=[];
+  TESTS.forEach(t=>(t.lr?['l','r']:['']).forEach(s=>{ const k=t.id+s, a=first.v[k], b=last.v[k]; if(b==null) return; let d='';
+    if(h.length>1&&a!=null&&a!==b){ const good=(b-a)*t.better>0; d=`<span class="${good?'up':'down'}">${b-a>0?'+':''}${+(b-a).toFixed(1)}</span>`; }
+    rows.push(`<tr><td>${t.n}${s?(s==='l'?' links':' rechts'):''}</td><td class="num">${a??'–'}</td><td class="num">${b} ${t.u==='0–3'?'':t.u}</td><td class="num">${d}</td></tr>`); }));
+  const dt=x=>new Date(x).toLocaleDateString('de-DE');
+  $('testhist').innerHTML=`<h2>Entwicklung <span class="dur">${h.length} Tests</span></h2><div style="overflow-x:auto"><table><tr><th>Test</th><th class="num">${dt(first.ts)}</th><th class="num">${dt(last.ts)}</th><th class="num">Δ</th></tr>${rows.join('')}</table></div>`; }
+$('savetest').addEventListener('click',()=>{ const v={}; document.querySelectorAll('#tests input').forEach(i=>{ if(i.value!==''&&!isNaN(+i.value)) v[i.id.slice(2)]=+i.value; });
+  if(!Object.keys(v).length){ $('savetest').textContent='Mindestens einen Wert eintragen'; setTimeout(()=>$('savetest').textContent='Test speichern',1800); return; }
+  S.tests.push({ts:Date.now(),v}); save(); renderTests(); });
+
+/* ---------- Verlauf ---------- */
+function renderHist(){ const h=S.history; if(!h.length){ $('hist').innerHTML='<p class="sub">Noch keine Einheit abgeschlossen. Nach deiner ersten Einheit erscheint sie hier.</p>'; return; }
+  const day=t=>{const d=new Date(t); d.setHours(0,0,0,0); return d.getTime();}; const days=new Set(h.map(x=>day(x.ts)));
+  let streak=0, d=day(Date.now()); if(!days.has(d)) d-=864e5; while(days.has(d)){streak++; d=day(d-36e5);}
+  const wk=h.filter(x=>Date.now()-x.ts<7*864e5);
+  $('hist').innerHTML=`<div class="stats"><div><b>${streak}</b><span class="sub">Tage in Folge</span></div><div><b>${wk.length}</b><span class="sub">Einheiten in 7 Tagen</span></div><div><b>${wk.reduce((a,x)=>a+x.min,0)}</b><span class="sub">Minuten in 7 Tagen</span></div></div><div style="overflow-x:auto"><table><tr><th>Datum</th><th>Einheit</th><th class="num">Dauer</th></tr>`
+   +h.slice().reverse().slice(0,60).map(x=>`<tr><td>${new Date(x.ts).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'})}</td><td>${x.label}<br><span class="sub">${x.n} Übungen</span></td><td class="num">${x.min} min</td></tr>`).join('')+`</table></div>`; }
+
+/* ---------- Tabs ---------- */
+const TABS=[['einheit','Einheit'],['routinen','Routinen'],['library','Übungen'],['test','Test'],['verlauf','Verlauf']];
+function show(v){ TABS.forEach(([k])=>{$('v-'+k).hidden=k!==v;}); $('tabs').innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${k===v}" data-t="${k}">${l}</button>`).join(''); window.scrollTo(0,0); }
+$('tabs').addEventListener('click',e=>{ const t=e.target.closest('[data-t]'); if(t) show(t.dataset.t); });
+function renderAll(){ renderKonto(); renderCfg(); renderRout(); renderLib(); renderTests(); renderHist(); }
+renderAll(); show(['einheit','routinen','library','test','verlauf'].includes(location.hash.slice(1))?location.hash.slice(1):'einheit');
+</script>
+
+</body>
+</html>
