@@ -24,4 +24,4 @@ Bis hierhin läuft die App ohne Konto. Verlauf und Tests liegen auf dem jeweilig
 Der anon Key darf öffentlich im Repository stehen. Die Daten schützt die Regel aus `supabase.sql`: Jedes Konto sieht nur die eigene Zeile.
 
 ## Updates
-Neue Dateien im Repository ersetzen und in `sw.js` die Versionsnummer (`gelenkwerk-v1`) erhöhen.
+Neue Dateien im Repository ersetzen und in `sw.js` die Versionsnummer (z. B. `gelenkwerk-v2` auf `gelenkwerk-v3`) erhöhen.
